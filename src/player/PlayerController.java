@@ -1,8 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-package mygame;
+package player;
 
 import com.jme3.bullet.control.CharacterControl;
 import com.jme3.input.InputManager;
@@ -12,7 +8,7 @@ import com.jme3.input.controls.KeyTrigger;
 
 /** Description
  *  
- * @author MIKUiqnw0 (Patricio)
+ * @author MIKUiqnw0(Patricio)
  * @param inputManager Requires the inputManager object to implement controls
  * @since 8/03/2013
  * @version 0.00.01
@@ -62,11 +58,32 @@ public class PlayerController extends CharacterControl implements ActionListener
         inputManager.addMapping("Up", new KeyTrigger(KeyInput.KEY_W));
         inputManager.addMapping("Down", new KeyTrigger(KeyInput.KEY_S));
         inputManager.addMapping("Use", new KeyTrigger(KeyInput.KEY_E));
-        inputManager.addMapping("Activate Sprint", new KeyTrigger(KeyInput.KEY_LSHIFT));
-        inputManager.addMapping("", triggers)
+        inputManager.addMapping("Sprint", new KeyTrigger(KeyInput.KEY_LSHIFT));
+        inputManager.addMapping("Crouch", new KeyTrigger(KeyInput.KEY_LCONTROL));
+        
+        inputManager.addListener(this, new String[]{
+            "Left", "Right", "Up", "Down", "Use", "Sprint", "Crouch"                
+        });
     }
     
     public void onAction(String name, boolean isPressed, float tpf) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (this.isEnabled()) {
+            switch (name) {
+                case "Left":
+                    break;
+                case "Right":
+                    break;
+                case "Up":
+                    break;
+                case "Down":
+                    break;
+                case "Use":
+                    break;
+                case "Sprint":
+                    break;
+                case "Crouch":
+                    break;
+            }
+        }
     }
 }

@@ -1,16 +1,15 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-package terrain;
+package generators;
 
 import com.jme3.scene.Spatial;
 
 /**
- *
- * @author mdm110-08
+ * 
+ * @author MIKUiqnw0(Patricio)
+ * @param
+ * @since 8/03/2013
+ * @version 0.00.01
  */
-public class Factory {
+abstract public class ObjectFactory {
 
     public static Spatial MakeKey() {
         throw new UnsupportedOperationException("Not yet implemented");
@@ -31,12 +30,15 @@ public class Factory {
     public static Spatial MakeDoor() {
         throw new UnsupportedOperationException("Not yet implemented");
     }
+
     public static Spatial MakeTinderBox() {
         throw new UnsupportedOperationException("Not yet implemented");
     }
+
     public static Spatial MakeOilCanister() {
         throw new UnsupportedOperationException("Not yet implemented");
     }
+
     public static Spatial MakeTorch() {
         throw new UnsupportedOperationException("Not yet implemented");
     }
