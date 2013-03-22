@@ -1,58 +1,108 @@
 package player;
 
+import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
 import com.jme3.bullet.control.CharacterControl;
 import com.jme3.input.InputManager;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
+import com.jme3.math.Vector3f;
 
-/** Description
- *  
- * @author MIKUiqnw0(Patricio)
+/**
+ * Object establishes attributes of the human controlled character, including
+ * input controls.
+ *
+ * @author MIKUiqnw0
  * @param inputManager Requires the inputManager object to implement controls
  * @since 8/03/2013
- * @version 0.00.01
+ * @version 0.00.02
  */
 public class PlayerController extends CharacterControl implements ActionListener {
-    private int     health;
-    private float   runspeed;
-    private int     healthPot,
-                    speedPot,
-                    tinder;
-    private float   regenRate;
-    private int     regenAmount;
+
+    private int health;
+    private float runSpeed;
+    private int healthPot,
+                speedPot,
+                tinder;
+    private float regenRate;
+    private int regenAmount;
     private InputManager inputManager;
-            
+
     public PlayerController(InputManager inputManager) {
+        super(new CapsuleCollisionShape(1.5f, 5f, 1), 0.05f);
         health = 100;
-        runspeed = 5;
+        runSpeed = 5;
         healthPot = 0;
         speedPot = 0;
         tinder = 0;
         regenRate = 15;
         regenAmount = 1;
-        
+
         this.inputManager = inputManager;
     }
 
     public int getHealth() {
         return health;
     }
+
     public int getHealthPotCount() {
         return healthPot;
     }
+
     public int getSpeedPotCount() {
         return speedPot;
     }
+
     public int getTinderCount() {
         return tinder;
     }
+
+    public float getRunSpeed() {
+        return runSpeed;
+    }
+
+    public float getRegenRate() {
+        return regenRate;
+    }
+
+    public int getRegenAmount() {
+        return regenAmount;
+    }
+    
+    public Vector3f getPlayerLocation() {
+        return this.getPhysicsLocation();
+    }
+
     public void setHealth(int newHealth) {
         health = newHealth;
         // Add validation
     }
+
+    public void setRunSpeed(float newRunSpeed) {
+        runSpeed = newRunSpeed;
+    }
+
+    public void setRegenRate(float newRegenRate) {
+        regenRate = newRegenRate;
+    }
+
+    public void setRegenAmount(int newRegenAmount) {
+        regenAmount = newRegenAmount;
+    }
+
+    public void setHealthPotionCount(int modifier) {
+        healthPot += modifier;
+    }
     
-    public void setupKeys(InputManager inputManager) {
+    public void setSpeedPotionCount(int modifier) {
+        speedPot += modifier;
+    }
+    
+    public void initializeArms() {
+        //model loading here
+    }
+    
+    public void setupKeys() {
         inputManager.addMapping("Left", new KeyTrigger(KeyInput.KEY_A));
         inputManager.addMapping("Right", new KeyTrigger(KeyInput.KEY_D));
         inputManager.addMapping("Up", new KeyTrigger(KeyInput.KEY_W));
@@ -60,12 +110,13 @@ public class PlayerController extends CharacterControl implements ActionListener
         inputManager.addMapping("Use", new KeyTrigger(KeyInput.KEY_E));
         inputManager.addMapping("Sprint", new KeyTrigger(KeyInput.KEY_LSHIFT));
         inputManager.addMapping("Crouch", new KeyTrigger(KeyInput.KEY_LCONTROL));
-        
+
         inputManager.addListener(this, new String[]{
-            "Left", "Right", "Up", "Down", "Use", "Sprint", "Crouch"                
-        });
+                    "Left", "Right", "Up", "Down", "Use", "Sprint", "Crouch"
+                });
     }
-    
+
+    @Override
     public void onAction(String name, boolean isPressed, float tpf) {
         if (this.isEnabled()) {
             switch (name) {
