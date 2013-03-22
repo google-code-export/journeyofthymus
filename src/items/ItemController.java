@@ -28,4 +28,7 @@ public class ItemController extends RigidBodyControl implements PhysicsCollision
     public void collision(PhysicsCollisionEvent event) {
         
     }
+    public void imadechangeshere() {
+        
+    }
 }
