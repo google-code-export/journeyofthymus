@@ -1,11 +1,17 @@
 package driver;
 
 import com.jme3.app.SimpleApplication;
-import com.jme3.bullet.BulletAppState;
 import com.jme3.renderer.RenderManager;
 import com.jme3.system.AppSettings;
+import sound.SoundController;
+import states.GameState;
+import states.MenuState;
 
 public class Main extends SimpleApplication {
+
+    private MenuState menuState;
+    private GameState gameState;
+    private SoundController soundController;
 
     public static void main(String[] args) {
         Main app = new Main();
@@ -20,9 +26,11 @@ public class Main extends SimpleApplication {
 
     @Override
     public void simpleInitApp() {
-        BulletAppState bulletAppState = new BulletAppState();
-        stateManager.attach(bulletAppState);
-        bulletAppState.getPhysicsSpace().enableDebug(assetManager);
+        menuState = new MenuState();
+        gameState = new GameState();
+        soundController = new SoundController(assetManager, rootNode);
+        soundController.initAudio();
+        soundController.playSound(SoundController.soundEvent.MUSIC_THEME);
     }
 
     @Override

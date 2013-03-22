@@ -1,9 +1,41 @@
 package states;
 
+import com.jme3.app.Application;
+import com.jme3.app.SimpleApplication;
+import com.jme3.app.state.AbstractAppState;
+import com.jme3.app.state.AppStateManager;
+import com.jme3.input.InputManager;
+import items.ItemController;
+import player.PlayerController;
+
 /**
  *
- * @author
+ * @author MIKUiqnw0
+ * @since 21/03/2013
+ * @version 0.00.01
  */
-public class GameState {
+public class GameState extends AbstractAppState {
+
+    private PlayerController playerControl;
+    private InputManager inputManager;
+    private ItemController itemControl;
+    
+    
+    @Override
+    public void initialize(AppStateManager stateManager, Application app) {
+        super.initialize(stateManager, app);
+        inputManager = ((SimpleApplication) app).getInputManager();
+        
+    }
+
+    @Override
+    public void update(float tpf) {
+        super.update(tpf);
+    }
+    
+    public void initializePlayer() {
+        playerControl = new PlayerController(inputManager);
+    }
+    
     
 }
