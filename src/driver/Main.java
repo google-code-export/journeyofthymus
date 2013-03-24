@@ -1,11 +1,15 @@
 package driver;
 
 import com.jme3.app.SimpleApplication;
-import com.jme3.bullet.BulletAppState;
 import com.jme3.renderer.RenderManager;
 import com.jme3.system.AppSettings;
+import states.GameState;
+import states.MenuState;
 
-public class Main extends SimpleApplication {
+public class Main extends SimpleApplication implements ApplicationInterface {
+
+    private MenuState menuState;
+    private GameState gameState;
 
     public static void main(String[] args) {
         Main app = new Main();
@@ -20,9 +24,11 @@ public class Main extends SimpleApplication {
 
     @Override
     public void simpleInitApp() {
-        BulletAppState bulletAppState = new BulletAppState();
-        stateManager.attach(bulletAppState);
-        bulletAppState.getPhysicsSpace().enableDebug(assetManager);
+        menuState = new MenuState();
+        gameState = new GameState(this);
+        
+        //stateManager.attach(menuState);
+        stateManager.attach(gameState);
     }
 
     @Override
