@@ -8,11 +8,11 @@ package generators;
  *
  * @author mdm110-09
  */
-class Tile {
-    private char code;
-    
-    public Tile(char code){
+public class Tile {
+
+    public char code;
+
+    public Tile(char code) {
         this.code = code;
     }
-          
 }

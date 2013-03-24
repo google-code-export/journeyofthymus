@@ -9,10 +9,10 @@ package generators;
  * @author mdm110-09
  */
 public class Map {
-    private Tile map[][];
-    
-    public Map(Tile map[][])
-    {
+
+    public Tile map[][];
+
+    public Map(Tile map[][]) {
         this.map = map;
     }
 }
