@@ -6,7 +6,7 @@ import com.jme3.system.AppSettings;
 import states.GameState;
 import states.MenuState;
 
-public class Main extends SimpleApplication {
+public class Main extends SimpleApplication implements ApplicationInterface {
 
     private MenuState menuState;
     private GameState gameState;
@@ -25,7 +25,7 @@ public class Main extends SimpleApplication {
     @Override
     public void simpleInitApp() {
         menuState = new MenuState();
-        gameState = new GameState();
+        gameState = new GameState(this);
         
         //stateManager.attach(menuState);
         stateManager.attach(gameState);
