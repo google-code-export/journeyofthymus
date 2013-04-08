@@ -1,10 +1,14 @@
 package states;
 
 import com.jme3.app.Application;
-import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
+import com.jme3.asset.AssetManager;
 import com.jme3.input.InputManager;
+import com.jme3.scene.Node;
+import driver.ApplicationInterface;
+import excep.LoadingException;
+import generators.TerrainBuilder;
 import items.ItemController;
 import player.PlayerController;
 
@@ -17,25 +21,43 @@ import player.PlayerController;
 public class GameState extends AbstractAppState {
 
     private PlayerController playerControl;
-    private InputManager inputManager;
     private ItemController itemControl;
-    
+    private ApplicationInterface app;
+    private TerrainBuilder terrainBuilder;
+
+    public GameState(ApplicationInterface app) {
+        this.app = app;
+    }
     
     @Override
     public void initialize(AppStateManager stateManager, Application app) {
         super.initialize(stateManager, app);
-        inputManager = ((SimpleApplication) app).getInputManager();
-        
+        try {
+            initializePlayer();
+        } catch (LoadingException e) {
+            
+        }
+        initializeMap();
     }
-
+    
     @Override
     public void update(float tpf) {
-        super.update(tpf);
+        super.update(tpf);  
     }
     
-    public void initializePlayer() {
-        playerControl = new PlayerController(inputManager);
+    public void initializeMap() {
+        terrainBuilder = new TerrainBuilder(app.getAssetManager(), app.getRootNode());
+        terrainBuilder.buildMap();
     }
     
+    public void initializePlayer() throws LoadingException {
+        Node playerNode = new Node("Player");
+        app.getRootNode().attachChild(playerNode);
+        playerControl = new PlayerController(app);
+        playerControl.setupKeys();
+    }
+    
+    public void initializeItems() {
+    }
     
 }
