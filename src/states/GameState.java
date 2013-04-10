@@ -8,6 +8,7 @@ import com.jme3.input.InputManager;
 import com.jme3.scene.Node;
 import driver.ApplicationInterface;
 import excep.LoadingException;
+import generators.TerrainBuilder;
 import items.ItemController;
 import player.PlayerController;
 
@@ -22,6 +23,7 @@ public class GameState extends AbstractAppState {
     private PlayerController playerControl;
     private ItemController itemControl;
     private ApplicationInterface app;
+    private TerrainBuilder terrainBuilder;
 
     public GameState(ApplicationInterface app) {
         this.app = app;
@@ -35,11 +37,17 @@ public class GameState extends AbstractAppState {
         } catch (LoadingException e) {
             
         }
+        initializeMap();
     }
     
     @Override
     public void update(float tpf) {
         super.update(tpf);  
+    }
+    
+    public void initializeMap() {
+        terrainBuilder = new TerrainBuilder(app.getAssetManager(), app.getRootNode());
+        terrainBuilder.buildMap();
     }
     
     public void initializePlayer() throws LoadingException {
