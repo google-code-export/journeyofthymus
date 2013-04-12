@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Document   : confirmQuit.xml
+    Created on : 13 September 2012, 10:13 AM - 
+    Last Modify: 15 November 2012
+    Author     : Cesar Frederick Tan
+    Description:
+        Confirm user whether to quit the game or not.
+    Modification made:
+        Nov 15 2012:
+            changed the screen name id to confirmQuit, 
+            added visibleToMouse to both buttons, 
+            changed buton ids into quitYes and quitNo and
+            added <interact> tags to both controls.
+            This XML is integrated at gameHud.xml
+-->
+
+<nifty xmlns="http://nifty-gui.sourceforge.net/nifty-1.3.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://nifty-gui.sourceforge.net/nifty-1.3.xsd http://nifty-gui.sourceforge.net/nifty-1.3.xsd">
+    <useStyles filename="nifty-default-styles.xml" />
+    <useControls filename="nifty-default-controls.xml" />
+
+    <screen id="ConfirmQuit">
+        <layer childLayout="center"  >
+            <panel width="230" height="135" childLayout="vertical" backgroundImage="Interface/confirmQuit.png">
+                <panel height="80px" />
+                <panel height="21px" childLayout="horizontal">
+                    <panel width="40" />
+                    <control  name="button" label="Yes" id="quitYes" width="60" visibleToMouse="true">
+                        <interact onClick="continueGame()"/>
+                    </control>
+                    <panel width="30" />
+                    <control name="button" label="No" id="quitNo" width="60" visibleToMouse="true">
+                        <interact onClick="quitGame()"/>
+                    </control>
+                </panel>
+            </panel>
+        </layer>
+    </screen>
+</nifty>
