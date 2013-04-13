@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Document   : map.xml
+    Created on : 12 April 2013, 13:13 AM - 
+    Last Modify: 
+    Author     : Cesar Frederick Tan
+    Description:
+        map the location of the player.
+    Modification made:
+-->
+
+<nifty xmlns="http://nifty-gui.sourceforge.net/nifty-1.3.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://nifty-gui.sourceforge.net/nifty-1.3.xsd http://nifty-gui.sourceforge.net/nifty-1.3.xsd">
+    <useStyles filename="nifty-default-styles.xml" />
+    <useControls filename="nifty-default-controls.xml" />
+
+    <screen id="map">
+        <layer childLayout="absolute"  >
+            <panel width="420" height="350" childLayout="vertical" id="MapImage" backgroundImage="Interface/maze.png">
+                <panel height="1px" id="RowPos" />
+                <panel height="21px" childLayout="horizontal">
+                    <panel width="30px" id="ColPos" />
+                    <panel width="15" height="15" backgroundImage="Interface/playerLoc.png" />
+                </panel>
+            </panel>
+        </layer>
+    </screen>
+</nifty>
