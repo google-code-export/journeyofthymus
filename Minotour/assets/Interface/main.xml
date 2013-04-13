@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <!--
     Document   : main.xml
-    Created on : 12 April 2013
+    Created on : 12 April 2013, 10:51 AM
     Last Modify:
     Author     : Cesar Frederick Tan
     Description:
         Display the main menu screen.
-    Modification made:
+        
+    Modifications:
+        Date        :
+        Modified By :
+        Description :
 -->
 
 <nifty xmlns="http://nifty-gui.sourceforge.net/nifty-1.3.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://nifty-gui.sourceforge.net/nifty-1.3.xsd http://nifty-gui.sourceforge.net/nifty-1.3.xsd">
@@ -16,15 +19,25 @@
 
     <screen id="ConfirmQuit">
         <layer childLayout="center"  >
-            <panel width="230" height="135" childLayout="vertical" backgroundImage="Interface/maze.png">
-                <panel height="80px" />
+            <panel width="700" height="400" childLayout="vertical" backgroundImage="Interface/mainMenu.png">
+                <panel height="180px" />
                 <panel height="21px" childLayout="horizontal">
-                    <panel width="40" />
-                    <control  name="button" label="Yes" id="quitYes" width="60" visibleToMouse="true">
-                        <interact onClick="continueGame()"/>
+                    <panel width="100" />
+                    <control  name="button" label="Start the Game" id="StartGame" width="150" visibleToMouse="true">
+                        <interact onClick="startGame()"/>
                     </control>
-                    <panel width="30" />
-                    <control name="button" label="No" id="quitNo" width="60" visibleToMouse="true">
+                </panel>
+                <panel height="30px" />
+                <panel height="50px" childLayout="horizontal">
+                    <panel width="100" />
+                    <control name="button" label="How to Play" id="HelpGame" width="150" visibleToMouse="true">
+                        <interact onClick="helpGame()"/>
+                    </control>
+                </panel>
+                 <panel height="20px" />
+                <panel height="50px" childLayout="horizontal">
+                    <panel width="100" />
+                    <control name="button" label="Abort" id="ExitGame" width="150" visibleToMouse="true">
                         <interact onClick="quitGame()"/>
                     </control>
                 </panel>
