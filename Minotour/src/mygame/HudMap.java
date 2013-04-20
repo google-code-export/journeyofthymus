@@ -11,8 +11,8 @@ import de.lessvoid.nifty.Nifty;
 public class HudMap 
 {
     private static final int 
-            MAX_HEIGHT = 100, 
-            MAX_WIDTH = 100, 
+            MAX_HEIGHT = 140, 
+            MAX_WIDTH = 200, 
             MIN_HEIGHT = 0, 
             MIN_WIDTH = 0;
     private static int 

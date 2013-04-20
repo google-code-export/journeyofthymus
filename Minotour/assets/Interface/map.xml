@@ -16,11 +16,11 @@
 
     <screen id="map">
         <layer childLayout="absolute"  >
-            <panel width="420" height="350" childLayout="vertical" id="MapImage" backgroundImage="Interface/maze.png">
-                <panel height="1px" id="RowPos" />
+            <panel width="210" height="150" childLayout="vertical" id="MapImage" backgroundImage="Interface/maze.png">
+                <panel height="0px" id="RowPos" />
                 <panel height="21px" childLayout="horizontal">
-                    <panel width="30px" id="ColPos" />
-                    <panel width="15" height="15" backgroundImage="Interface/playerLoc.png" />
+                    <panel width="15px" id="ColPos" />
+                    <panel width="10" height="10" backgroundImage="Interface/playerLoc.png" />
                 </panel>
             </panel>
         </layer>
