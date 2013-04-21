@@ -18,30 +18,31 @@ public class HudMap
     private static int 
             curRow, 
             curCol;
-    private static Nifty hudNifty;
+    private static Nifty 
+            mapNifty;
    
-    public HudMap(Nifty passNifty)
+    public HudMap(Nifty nifty)
     {
-        hudNifty = passNifty;
+        mapNifty = nifty;
         curRow = 0;
         curCol = 0;
-    }
+     }
     
     private void PutInColumn(int NewColumn)
     {
-        if (NewColumn <= MAX_WIDTH & NewColumn >= MIN_WIDTH )
+        if (NewColumn <= MAX_WIDTH && NewColumn >= MIN_WIDTH )
         {
             curCol = NewColumn;
-            hudNifty.getCurrentScreen().findElementByName("ColPos").setWidth(curCol);
+            mapNifty.getCurrentScreen().findElementByName("ColPos").setWidth(curCol);
         }
     }
     
     private void PutInRow(int NewRow)
     {
-        if (NewRow <= MAX_HEIGHT & NewRow >= MIN_HEIGHT)
+        if (NewRow <= MAX_HEIGHT && NewRow >= MIN_HEIGHT)
         {
             curRow = NewRow;
-            hudNifty.getCurrentScreen().findElementByName("RowPos").setHeight(curRow);
+            mapNifty.getCurrentScreen().findElementByName("RowPos").setHeight(curRow);
         }
     }
     
