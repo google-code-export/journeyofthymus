@@ -15,9 +15,9 @@ import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
-import com.jme3.niftygui.NiftyJmeDisplay;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.ui.Picture;
 import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.screen.Screen;
 import de.lessvoid.nifty.screen.ScreenController;
@@ -36,9 +36,14 @@ public class Main extends SimpleApplication implements ActionListener,ScreenCont
   private Vector3f walkDirection = new Vector3f();
   private boolean left = false, right = false, up = false, down = false;
   //Nifty GUI
-  private HudMap myMap; 
-  private Screen myScreen;
-  private Nifty nifty;
+  private Map Maze; 
+  private Spot playerSpot;
+  private Picture pic, picSpot;
+  // You can have spots as many as you want.
+  //private Spot player2Spot;
+  //private Spot player3Spot;
+  //private Spot EnemySpot;
+  //private Spot MinotourSpot;
  
   public static void main(String[] args) {
     Main app = new Main();
@@ -47,19 +52,26 @@ public class Main extends SimpleApplication implements ActionListener,ScreenCont
   }
   
  @Override
-  public void simpleInitApp() {
-    NiftyJmeDisplay niftyDisplay = new NiftyJmeDisplay(assetManager,
-                                                     inputManager,
-                                                      audioRenderer,
-                                                      guiViewPort);
-    nifty = niftyDisplay.getNifty();
-    nifty.fromXml("Interface/map.xml", "map", this);
-    guiViewPort.addProcessor(niftyDisplay);
-    myMap = new HudMap(nifty); 
-    myMap.GoDownBy(5);
-    myMap.MovePlayerOn(100, 100);
-    guiNode.detachAllChildren();
+  public void simpleInitApp() 
+ {
     /** Set up Physics */
+    pic = new Picture("Maze Map");
+    pic.setImage(assetManager, "Interface/maze.png", true);
+    float mapWidth = settings.getWidth()/5;
+    float mapHeight = settings.getHeight()/5;
+    float toX = settings.getWidth() - (mapWidth + 10);
+    float toY = settings.getHeight()- (mapHeight + 10);
+    guiNode.attachChild(pic);
+    Maze = new Map(pic, mapWidth, mapHeight, toX, toY);
+
+    picSpot = new Picture("Player Spot");
+    picSpot.setImage(assetManager, "Interface/playerLoc.png", true);
+    guiNode.attachChild(picSpot);
+    playerSpot = new Spot(picSpot, Maze);
+    playerSpot.setSpot(20, 15);
+    playerSpot.setSpot(100, 100);
+
+
     bulletAppState = new BulletAppState();
     stateManager.attach(bulletAppState);
     //bulletAppState.getPhysicsSpace().enableDebug(assetManager);
@@ -111,7 +123,7 @@ public class Main extends SimpleApplication implements ActionListener,ScreenCont
     rootNode.addLight(al);
  
     DirectionalLight dl = new DirectionalLight();
-    dl.setColor(ColorRGBA.White);
+    dl.setColor(ColorRGBA.Brown);
     dl.setDirection(new Vector3f(2.8f, -2.8f, -2.8f).normalizeLocal());
     rootNode.addLight(dl);
   }
@@ -137,22 +149,18 @@ public class Main extends SimpleApplication implements ActionListener,ScreenCont
     if (binding.equals("Left")) 
     {
       left = value;
-      myMap.GoLeftBy(2);
     } 
     else if (binding.equals("Right")) 
     {
       right = value;
-      myMap.GoRightBy(2);
     } 
     else if (binding.equals("Up")) 
     {
       up = value;
-      myMap.GoUpBy(2);
     } 
     else if (binding.equals("Down")) 
     {
       down = value;
-      myMap.GoDownBy(2);
     } 
     else if (binding.equals("Jump")) 
     {
@@ -175,28 +183,28 @@ public class Main extends SimpleApplication implements ActionListener,ScreenCont
     if (left)  
     { 
         walkDirection.addLocal(camLeft); 
-        myMap.GoLeftBy(2);
+        playerSpot.GoLeftBy(1f);
     }
     if (right) 
     { 
         walkDirection.addLocal(camLeft.negate()); 
-        myMap.GoRightBy(2);
+        playerSpot.GoRightBy(1f);
     }
     if (up)    
     { 
-        walkDirection.addLocal(camDir); 
+        walkDirection.addLocal(camDir);
+        playerSpot.GoUpBy(1f);
     }
     if (down)  
     { 
         walkDirection.addLocal(camDir.negate()); 
+        playerSpot.GoDownBy(1f);
     }
     player.setWalkDirection(walkDirection);
     cam.setLocation(player.getPhysicsLocation());
   }
 
     public void bind(Nifty nifty, Screen screen) {
-        //this.nifty = nifty;
-        //myScreen = screen;
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
