@@ -3,13 +3,11 @@ package states;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
-import com.jme3.asset.AssetManager;
-import com.jme3.input.InputManager;
+import com.jme3.bullet.BulletAppState;
 import com.jme3.scene.Node;
+import com.jme3.math.Vector3f;
 import driver.ApplicationInterface;
-import excep.LoadingException;
 import generators.TerrainBuilder;
-import items.ItemController;
 import player.PlayerController;
 
 /**
@@ -21,7 +19,6 @@ import player.PlayerController;
 public class GameState extends AbstractAppState {
 
     private PlayerController playerControl;
-    private ItemController itemControl;
     private ApplicationInterface app;
     private TerrainBuilder terrainBuilder;
 
@@ -32,12 +29,8 @@ public class GameState extends AbstractAppState {
     @Override
     public void initialize(AppStateManager stateManager, Application app) {
         super.initialize(stateManager, app);
-        try {
-            initializePlayer();
-        } catch (LoadingException e) {
-            
-        }
         initializeMap();
+        initializePlayer();
     }
     
     @Override
@@ -46,15 +39,21 @@ public class GameState extends AbstractAppState {
     }
     
     public void initializeMap() {
-        terrainBuilder = new TerrainBuilder(app.getAssetManager(), app.getRootNode());
+        terrainBuilder = new TerrainBuilder(app.getAssetManager(), app.getRootNode(), app);
         terrainBuilder.buildMap();
     }
     
-    public void initializePlayer() throws LoadingException {
+    public void initializePlayer() {
         Node playerNode = new Node("Player");
         app.getRootNode().attachChild(playerNode);
         playerControl = new PlayerController(app);
+        playerControl.setGravity(1);
+        playerControl.setFallSpeed(1);
         playerControl.setupKeys();
+        app.getStateManager().getState(BulletAppState.class).getPhysicsSpace().add(playerControl);
+        playerNode.addControl(playerControl);        
+        playerControl.setPhysicsLocation(terrainBuilder.getSpawnPoint());
+        
     }
     
     public void initializeItems() {

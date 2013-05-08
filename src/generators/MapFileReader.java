@@ -24,6 +24,7 @@ public class MapFileReader {
     };
     private static int dimX = 0, dimY = 0;
     private static Tile[][] tiles = null;
+    private static Tile[][] cleanMap = null;
 
     public static Tile[][] loadMap(String name) {
 
@@ -56,15 +57,27 @@ public class MapFileReader {
         }
 
         // allocate array based on map dimensions
-        tiles = new Tile[dimX][dimY];
+        tiles = createMapArray();
+        cleanMap = createMapArray();
         // read data from file into array
         readMap(name);
         // redundancy parse
-        tiles = clean(tiles);
+        tiles = clean();
         // add decorations to array
         decorate();
         // result = clean and decorated map ready for build
         return tiles;
+    }
+
+    private static Tile[][] createMapArray() {
+        Tile[][] newMapArray = new Tile[dimX][dimY];
+        for (int i = 0; i < dimY; i++) {
+            for (int j = 0; j < dimX; j++) {
+                newMapArray[j][i] = new Tile('V');
+            }
+        }
+
+        return newMapArray;
     }
 
     private static void readMap(String name) {
@@ -97,54 +110,64 @@ public class MapFileReader {
         }
     }
 
-    private static Tile[][] clean(Tile[][] cleanMap) {
+    private static Tile[][] clean() {
 
         int x, y;
-        boolean isRedundant;
 
         for (y = 0; y < dimY; y++) {
             for (x = 0; x < dimX; x++) {
                 ArrayList<Direction> edges = edge(x, y);
-                isRedundant = true;
+                cleanMap[x][y].code = tiles[x][y].code;
                 if (edges.contains(Direction.Up)) {
-                    isRedundant = checkRedundancy(x, y - 1, isRedundant);
+                    if (!checkRedundancy(x, y - 1)) {
+                        continue;
+                    }
                 }
                 if (edges.contains(Direction.Down)) {
-                    isRedundant = checkRedundancy(x, y + 1, isRedundant);
+                    if (!checkRedundancy(x, y + 1)) {
+                        continue;
+                    }
                 }
                 if (edges.contains(Direction.Left)) {
-                    isRedundant = checkRedundancy(x - 1, y, isRedundant);
+                    if (!checkRedundancy(x - 1, y)) {
+                        continue;
+                    }
                 }
                 if (edges.contains(Direction.Right)) {
-                    isRedundant = checkRedundancy(x + 1, y, isRedundant);
+                    if (!checkRedundancy(x + 1, y)) {
+                        continue;
+                    }
                 }
                 if (edges.contains(Direction.Up) && edges.contains(Direction.Left)) {
-                    isRedundant = checkRedundancy(x - 1, y - 1, isRedundant);
+                    if (!checkRedundancy(x - 1, y - 1)) {
+                        continue;
+                    }
                 }
                 if (edges.contains(Direction.Up) && edges.contains(Direction.Right)) {
-                    isRedundant = checkRedundancy(x + 1, y - 1, isRedundant);
+                    if (!checkRedundancy(x + 1, y - 1)) {
+                        continue;
+                    }
                 }
                 if (edges.contains(Direction.Down) && edges.contains(Direction.Left)) {
-                    isRedundant = checkRedundancy(x - 1, y + 1, isRedundant);
+                    if (!checkRedundancy(x - 1, y + 1)) {
+                        continue;
+                    }
                 }
                 if (edges.contains(Direction.Down) && edges.contains(Direction.Right)) {
-                    isRedundant = checkRedundancy(x + 1, y + 1, isRedundant);
+                    if (!checkRedundancy(x + 1, y + 1)) {
+                        continue;
+                    }
                 }
-
-                if (isRedundant) {
-                    cleanMap[x][y].code = 'V';
-                } else {
-                    cleanMap[x][y].code = tiles[x][y].code;
-                }
+                cleanMap[x][y].code = 'V';
             }
         }
         return cleanMap;
     }
 
-    private static boolean checkRedundancy(int x, int y, boolean isRedundant) {
+    private static boolean checkRedundancy(int x, int y) {
         switch (tiles[x][y].code) {
             case 'B':
-                return isRedundant;
+                return true;
             default:
                 return false;
         }
