@@ -4,6 +4,7 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.renderer.Camera;
 import com.jme3.renderer.RenderManager;
+import com.jme3.scene.CameraNode;
 import com.jme3.system.AppSettings;
 import states.GameState;
 import states.MenuState;
@@ -34,10 +35,9 @@ public class Main extends SimpleApplication implements ApplicationInterface {
         stateManager.attach(bulletAppState);
         //stateManager.attach(menuState);
         stateManager.attach(gameState);
-        flyCam.setMoveSpeed(30);
-        //cam.setFrustumNear(0.3f);
-        //cam.setFrustumFar(10f);
+        flyCam.setEnabled(false);
         bulletAppState.getPhysicsSpace().enableDebug(assetManager);
+        
     }
 
     @Override

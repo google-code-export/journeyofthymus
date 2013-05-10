@@ -3,15 +3,18 @@ package player;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
 import com.jme3.bullet.control.CharacterControl;
+import com.jme3.input.InputManager;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.math.Vector3f;
+import com.jme3.renderer.Camera;
 import driver.ApplicationInterface;
 import items.Boots;
 import items.ItemType;
 import items.Oil;
 import items.Potion;
+import items.Tinder;
 import items.Torch;
 
 /**
@@ -28,21 +31,24 @@ public class PlayerController extends CharacterControl implements ActionListener
     private int health, invHealthPotion, invSpeedPot, invOil, invTinder, regenAmount;
     private float regenRate, regenTimer, runSpeed;
     private float sprintTimer, speedPotionTimer, bootsCooldownTimer;
-    private boolean canSprint, crouching, sprintingStatus, speedPotionStatus, bootsCooldown;
+    private boolean canSprint, crouching, sprinting, speedPotionStatus, bootsCooldown;
     private boolean left, right, forward, backward;
-    private ApplicationInterface app;
-    private Torch torchObj;
-    private Vector3f eyeHeight;
+    private Torch torch;
+    private Camera cam;
+    private InputManager inputManager;
 
     public PlayerController(ApplicationInterface app) {
-        super(new CapsuleCollisionShape(0.2f, 1.5f, 1), 1f);
+        super(new CapsuleCollisionShape(0.4f, 1.5f, 1), 1f);
         health = 100;
-        runSpeed = 5;
+        runSpeed = 0.15f;
         regenRate = 15;
         regenAmount = 1;
-
-        this.app = app;
-        torchObj = new Torch(new BoxCollisionShape(new Vector3f(0.3f, 1, 0.3f)));
+        
+        cam = app.getCamera();
+        inputManager = app.getInputManager();
+        setupKeys();
+        
+        torch = new Torch(new BoxCollisionShape(new Vector3f(0.3f, 1, 0.3f)));
     }
 
     public int getHealth() {
@@ -138,15 +144,15 @@ public class PlayerController extends CharacterControl implements ActionListener
     private void useBoots() {
         if (canSprint && !bootsCooldown) {
             runSpeed += Boots.getModifier();
-            sprintingStatus = true;
+            sprinting = true;
             bootsCooldown = true;
         }
     }
 
     private void useOil() {
         if (isPositiveInventory(ItemType.OIL)) {
-            if (torchObj.getOilTimer() < Torch.getMaxOilTime()) {
-                torchObj.setOilTimer(Oil.getExtensionTime());
+            if (torch.getOilTimer() < Torch.getMaxOilTime()) {
+                torch.setOilTimer(Oil.getExtensionTime());
                 --invOil;
             }
         }
@@ -154,8 +160,10 @@ public class PlayerController extends CharacterControl implements ActionListener
 
     private void useTinder() {
         if (isPositiveInventory(ItemType.TINDER)) {
-            //method to tinder use
-            --invTinder;
+            if(torch.getTinderTimer() < Torch.getMaxTinderTime()) {
+                torch.setTinderTimer(Tinder.getExtensionTime());
+                --invTinder;
+            }
         }
     }
 
@@ -196,7 +204,7 @@ public class PlayerController extends CharacterControl implements ActionListener
             sprintTimer += tpf;
         } else {
             runSpeed -= Boots.getModifier();
-            sprintingStatus = false;
+            sprinting = false;
             sprintTimer = 0;
         }
     }
@@ -221,9 +229,10 @@ public class PlayerController extends CharacterControl implements ActionListener
     }
 
     private void updateMovement() {
-        Vector3f camDir = app.getCamera().getDirection().clone();
-        Vector3f camLeft = app.getCamera().getLeft().clone();
+        Vector3f camDir = cam.getDirection().clone();
+        Vector3f camLeft = cam.getLeft().clone();
         walkDirection.set(0, 0, 0);
+        
         if (left) {
             walkDirection.addLocal(camLeft);
         }
@@ -231,27 +240,33 @@ public class PlayerController extends CharacterControl implements ActionListener
             walkDirection.addLocal(camLeft.negate());
         }
         if (forward) {
-            walkDirection.addLocal(camDir);                                  // Restrict Y plane movement when moving forward
+            walkDirection.addLocal(camDir);
         }
         if (backward) {
-            walkDirection.addLocal(camDir.negate());                                    // and when moving backwards
+            walkDirection.addLocal(camDir.negate());
         }
-        walkDirection.setY(0);
-        walkDirection.normalizeLocal().multLocal(0.15f);
-        setWalkDirection(walkDirection);
-        
-        eyeHeight = getPhysicsLocation();
-        eyeHeight.y += 0.65;
-        eyeHeight.add(camDir.negate().multLocal(2f));
-        app.getCamera().setLocation(eyeHeight);
+        walkDirection.normalizeLocal().multLocal(runSpeed);
+        walkDirection.y = 0;
+        setWalkDirection(walkDirection); 
     }
-
+    
+    private void updateCamera() {
+        Vector3f eyeHeight = getPhysicsLocation();
+        cam.setLocation(eyeHeight);
+        
+        if(crouching) {
+            eyeHeight.y = 0.3f;
+        } else {
+            eyeHeight.y = 0.8f;
+        }
+        //eyeHeight.addLocal(camDir.negate().multLocal(0.3f));
+    }
     @Override
     public void update(float tpf) {
         if (health <= 0 || health != 100) {
             regenerationCheck(tpf);
         }
-        if (sprintingStatus) {
+        if (sprinting) {
             sprintingStatusCheck(tpf);
         }
         if (speedPotionStatus) {
@@ -261,35 +276,35 @@ public class PlayerController extends CharacterControl implements ActionListener
             updateCooldownTimer(tpf);
         }
 
-    //    if (torchObj.getO) {}
         updateMovement();
-        System.out.println(getPhysicsLocation());
+        updateCamera();
+        System.out.println(cam.getLocation());
     }
 
     /*
      * Initializes the default player keyboard setup for Journey of Thymus
      */
-    public void setupKeys() {
-        app.getInputManager().addMapping("Left", new KeyTrigger(KeyInput.KEY_A));
-        app.getInputManager().addMapping("Right", new KeyTrigger(KeyInput.KEY_D));
-        app.getInputManager().addMapping("Forward", new KeyTrigger(KeyInput.KEY_W));
-        app.getInputManager().addMapping("Backward", new KeyTrigger(KeyInput.KEY_S));
-        app.getInputManager().addMapping("Use", new KeyTrigger(KeyInput.KEY_E));
-        app.getInputManager().addMapping("Use_HP", new KeyTrigger(KeyInput.KEY_1));
-        app.getInputManager().addMapping("Use_SP", new KeyTrigger(KeyInput.KEY_2));
-        app.getInputManager().addMapping("Use_Oil", new KeyTrigger(KeyInput.KEY_3));
-        app.getInputManager().addMapping("Use_Tinder", new KeyTrigger(KeyInput.KEY_4));
-        app.getInputManager().addMapping("Sprint", new KeyTrigger(KeyInput.KEY_LSHIFT));
-        app.getInputManager().addMapping("Crouch", new KeyTrigger(KeyInput.KEY_LCONTROL));
+    public final void setupKeys() {
+        inputManager.addMapping("Left", new KeyTrigger(KeyInput.KEY_A));
+        inputManager.addMapping("Right", new KeyTrigger(KeyInput.KEY_D));
+        inputManager.addMapping("Forward", new KeyTrigger(KeyInput.KEY_W));
+        inputManager.addMapping("Backward", new KeyTrigger(KeyInput.KEY_S));
+        inputManager.addMapping("Use", new KeyTrigger(KeyInput.KEY_E));
+        inputManager.addMapping("Use_HP", new KeyTrigger(KeyInput.KEY_1));
+        inputManager.addMapping("Use_SP", new KeyTrigger(KeyInput.KEY_2));
+        inputManager.addMapping("Use_Oil", new KeyTrigger(KeyInput.KEY_3));
+        inputManager.addMapping("Use_Tinder", new KeyTrigger(KeyInput.KEY_4));
+        inputManager.addMapping("Sprint", new KeyTrigger(KeyInput.KEY_LSHIFT));
+        inputManager.addMapping("Crouch", new KeyTrigger(KeyInput.KEY_LCONTROL));
 
-        app.getInputManager().addListener(this, new String[]{
+        inputManager.addListener(this, new String[]{
                     "Left", "Right", "Forward", "Backward", "Use", "Use_HP", "Use_SP",
                     "Use_Oil", "Use_Tinder", "Sprint", "Crouch"
                 });
     }
 
     @Override
-    public void onAction(String name, boolean isPressed, float tpf) {
+    public void onAction(String name, boolean isPressed, float tpf) {           
         if (this.isEnabled()) {
             switch (name) {
                 case "Left":
@@ -304,42 +319,35 @@ public class PlayerController extends CharacterControl implements ActionListener
                 case "Backward":
                     backward = isPressed;
                     break;
-                case "Use":
-                    if (isPressed) {
-                        worldInteract();
-                    }
-                    break;
-                case "Use_HP":
-                    if (isPressed) {
-                        usePotion(ItemType.HEALTHPOTION);
-                    }
-                    break;
-                case "Use_SP":
-                    if (isPressed) {
-                        usePotion(ItemType.SPEEDPOTION);
-                    }
-                    break;
-                case "Use_Oil":
-                    if (isPressed) {
-                        useOil();
-                    }
-                    break;
-                case "Use_Tinder":
-                    if (isPressed) {
-                        useTinder();
-                    }
-                    break;
-                case "Sprint":
-                    if (isPressed) {
-                        useBoots();
-                    }
-                    break;
                 case "Crouch":
                     crouching = isPressed;
-                    if (isPressed) {
-                        doCrouchAnim();
-                    }
                     break;
+            }
+            
+            if(isPressed) {
+                switch(name) {
+                    case "Use":
+                        worldInteract();
+                        break;
+                    case "Use_HP":
+                        usePotion(ItemType.HEALTHPOTION);
+                        break;
+                    case "Use_SP":
+                        usePotion(ItemType.SPEEDPOTION);
+                        break;
+                    case "Use Oil":
+                        useOil();
+                        break;
+                    case "Use Tinder":
+                        useTinder();
+                        break;
+                    case "Sprint":
+                        useBoots();
+                        break;
+                    case "Crouch":
+                        doCrouchAnim();
+                        break;
+                }
             }
         }
     }

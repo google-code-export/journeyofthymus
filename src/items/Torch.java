@@ -36,10 +36,10 @@ public class Torch extends RigidBodyControl {
     }
     
     public void setOilTimer(float modifier) {
-        oilTimer += modifier;
+        oilTimer += (oilTimer + modifier > oilTimerMax) ? oilTimerMax - oilTimer : modifier;
     }
     
     public void setTinderTimer(float modifier) {
-        oilTimer += modifier;
+        tinderTimer += (tinderTimer + modifier > tinderTimerMax) ? tinderTimerMax - tinderTimer : modifier;
     }
 }

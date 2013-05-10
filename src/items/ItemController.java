@@ -23,7 +23,7 @@ import player.PlayerController;
 public class ItemController extends RigidBodyControl implements PhysicsCollisionListener {
     
     private boolean taken;
-    public Item itemReference;
+    private Item itemReference;
     
     public ItemController(CollisionShape shape, float mass, BulletAppState bulletAppState, ItemType type) {
         super(shape, mass);

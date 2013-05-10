@@ -27,14 +27,14 @@ public class TerrainBuilder {
     // move on to next tile and increment vector by fixed amount on X or Z
     private AssetManager assetManager;
     private Node rootNode, mapNode, spawnPoint;
-    private PhysicsSpace bas;
+    private PhysicsSpace physicsSpace;
     private final int BLOCK_WIDTH = 2,
             BLOCK_HEIGHT = 3;
 
-    public TerrainBuilder(AssetManager assetManager, Node rootNode, ApplicationInterface app) {
-        this.assetManager = assetManager;
-        this.rootNode = rootNode;
-        bas = app.getStateManager().getState(BulletAppState.class).getPhysicsSpace();
+    public TerrainBuilder(ApplicationInterface app) {
+        this.assetManager = app.getAssetManager();
+        this.rootNode = app.getRootNode();
+        physicsSpace = app.getStateManager().getState(BulletAppState.class).getPhysicsSpace();
     }
 
     public void buildMap() {
@@ -88,7 +88,7 @@ public class TerrainBuilder {
         RigidBodyControl labyrinth = new RigidBodyControl(labyrinthShape, 0);
         mapNode.addControl(labyrinth);
 
-        bas.add(labyrinth);
+        physicsSpace.add(labyrinth);
 
         rootNode.attachChild(mapNode);
     }
