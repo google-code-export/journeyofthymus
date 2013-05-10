@@ -1,7 +1,5 @@
 package items;
 
-import player.PlayerController;
-
 /**
  * Skeleton structure of a potion type and its effects.
  *
@@ -10,17 +8,28 @@ import player.PlayerController;
  * @since 22/03/2013
  * @version 0.00.01
  */
-public class Potion {
-    
-    public enum PotionType {
-        HEALTH, SPEED
-    }
-    private PotionType type;
-    private static final float healthModifier = 10;
-    private static final float speedModifier = 1;
+public class Potion extends Item {
 
+    private static final int healthModifier = 20;
+    private static final int speedModifier = 7;
+    private static final float speedTime = 10;
     
-    public Potion(PotionType type) {
-        this.type = type;
+    public Potion(ItemType type) {
+        super(type);
+    }
+
+    public static float getModifier(ItemType type) {
+        switch(type) {
+            case HEALTHPOTION:
+                return healthModifier;
+            case SPEEDPOTION:
+                return speedModifier;
+            default:
+                return 0;
+        }
+    }
+    
+    public static float getSpeedTime() {
+        return speedTime;
     }
 }
