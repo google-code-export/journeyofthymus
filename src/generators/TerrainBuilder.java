@@ -13,6 +13,7 @@ import driver.ApplicationInterface;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.Random;
 
 /**
@@ -33,6 +34,10 @@ public class TerrainBuilder {
             BLOCK_HEIGHT = 4,
             FLOOR_SEGMENTS = 4;
     private float DEC_CHANCE = 0.2f;
+    private Vector3f offset;
+    private Random rand;
+    private ArrayList<MapFileReader.Direction> decPlace;
+    private Tile[][] map;
 
     public TerrainBuilder(AssetManager assetManager, Node rootNode, ApplicationInterface app) {
         this.assetManager = assetManager;
@@ -50,7 +55,7 @@ public class TerrainBuilder {
                 block,
                 decoration;
 
-        Tile[][] map = new Map(MapFileReader.loadMap("assets/MapFiles/Labyrinth1.txt")).map;
+        map = new Map(MapFileReader.loadMap("assets/MapFiles/Labyrinth1.txt")).map;
         dimX = MapFileReader.getDimensions();
         ObjectFactory.setAssetManager(assetManager);
         mapNode = new Node("Map");
@@ -79,12 +84,10 @@ public class TerrainBuilder {
                         g.setColor(Color.GRAY);
                         break;
                     case ' ':
-                        Random r = new Random();
-                        if(r.nextFloat() < DEC_CHANCE) {
+                        rand = new Random();
+                        if(rand.nextFloat() < DEC_CHANCE) {
                             decoration = ObjectFactory.makeDecoration();
-                            Vector3f offset = new Vector3f((BLOCK_WIDTH * iX) /*- (BLOCK_WIDTH / 2) + (ObjectFactory.CRATE_SIZE / 2)*/, 
-                                                            0, 
-                                                            (BLOCK_WIDTH * iY) /*- (BLOCK_WIDTH / 2) + (ObjectFactory.CRATE_SIZE / 2)*/);
+                            setOffset(decoration.getName(), iX, iY);
                             decoration.setLocalTranslation(offset);
                             mapNode.attachChild(decoration);
                         }
@@ -120,6 +123,83 @@ public class TerrainBuilder {
         bas.add(labyrinth);
 
         rootNode.attachChild(mapNode);
+    }
+    
+    private void setOffset(String decType, int x, int z) {
+        Vector3f decSize = new Vector3f();
+        decPlace = new ArrayList<>();
+        if (map[x - 1][z].code == 'B') {
+            decPlace.add(MapFileReader.Direction.Left);
+        }
+        if (map[x + 1][z].code == 'B') {
+            decPlace.add(MapFileReader.Direction.Right);
+        }
+        if (map[x][z - 1].code == 'B') {
+            decPlace.add(MapFileReader.Direction.Up);
+        }
+        if (map[x][z + 1].code == 'B') {
+            decPlace.add(MapFileReader.Direction.Down);
+        }
+        
+        switch(decType) {
+            case "Crate":
+                decSize.x = ObjectFactory.CRATE_SIZE;
+                decSize.y = ObjectFactory.CRATE_SIZE / 2 + 0.25f;
+                decSize.z = ObjectFactory.CRATE_SIZE;
+                break;
+            case "Jug":
+                break;
+            default:
+                break;
+        }
+        
+        getOffset(decSize, x, z);
+    }
+    
+    private void getOffset(Vector3f size, int x, int z) {
+        float xOffset = 0, zOffset = 0;
+        Random r = new Random();
+        int side;
+        
+        if(decPlace.contains(MapFileReader.Direction.Left) && decPlace.contains(MapFileReader.Direction.Down)) {
+            xOffset = -(BLOCK_WIDTH / 2) + (size.x / 2);
+            zOffset = -(BLOCK_WIDTH / 2) + (size.z / 2);
+        } else if(decPlace.contains(MapFileReader.Direction.Left) && decPlace.contains(MapFileReader.Direction.Up)) {
+            xOffset = -(BLOCK_WIDTH / 2) + (size.x / 2);
+            zOffset =  (BLOCK_WIDTH / 2) - (size.z / 2);
+        } else if(decPlace.contains(MapFileReader.Direction.Left) && decPlace.contains(MapFileReader.Direction.Right)) {
+            side = r.nextInt(2);
+            switch(side) {
+                case 0:
+                    xOffset = -(BLOCK_WIDTH / 2) + (size.x / 2);
+                    break;
+                case 1:
+                    xOffset =  (BLOCK_WIDTH / 2) + (size.x / 2);
+                    break;
+            }
+            zOffset = 0;
+        } else if(decPlace.contains(MapFileReader.Direction.Right) && decPlace.contains(MapFileReader.Direction.Down)) {
+            xOffset =  (BLOCK_WIDTH / 2) + (size.x / 2);
+            zOffset = -(BLOCK_WIDTH / 2) + (size.z / 2);
+        } else if(decPlace.contains(MapFileReader.Direction.Right) && decPlace.contains(MapFileReader.Direction.Up)) {
+            xOffset =  (BLOCK_WIDTH / 2) + (size.x / 2);
+            zOffset =  (BLOCK_WIDTH / 2) + (size.z / 2);
+        } else if(decPlace.contains(MapFileReader.Direction.Down) && decPlace.contains(MapFileReader.Direction.Up)) {
+            side = r.nextInt(2);
+            switch(side) {
+                case 0:
+                    zOffset = -(BLOCK_WIDTH / 2) + (size.z / 2);
+                    break;
+                case 1:
+                    zOffset =  (BLOCK_WIDTH / 2) + (size.z / 2);
+                    break;
+            }
+            xOffset = 0;
+        }
+        
+        offset = new Vector3f((BLOCK_WIDTH * x) + xOffset, 
+                             -(BLOCK_WIDTH / 2) + size.y, 
+                              (BLOCK_WIDTH * z) + zOffset);
     }
 
     public Vector3f getSpawnPoint() {

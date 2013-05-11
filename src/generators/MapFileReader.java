@@ -18,12 +18,12 @@ import java.util.Scanner;
 public class MapFileReader {
 
     public enum Direction {
-
         Up, Down, Left, Right
     };
     private static int dimX = 0, dimY = 0;
     private static Tile[][] tiles = null;
     private static Tile[][] cleanMap = null;
+    private static ArrayList<Direction> edges;
 
     public static Tile[][] loadMap(String name) {
 
@@ -107,12 +107,11 @@ public class MapFileReader {
     }
 
     private static Tile[][] clean() {
-
         int x, y;
-
+        
         for (y = 0; y < dimY; y++) {
             for (x = 0; x < dimX; x++) {
-                ArrayList<Direction> edges = edge(x, y);
+                edges = edge(x, y);
                 cleanMap[x][y].code = tiles[x][y].code;
                 if (edges.contains(Direction.Up)) {
                     if (!checkRedundancy(x, y - 1)) {
