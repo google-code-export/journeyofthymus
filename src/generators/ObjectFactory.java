@@ -18,6 +18,7 @@ import com.jme3.scene.shape.Box;
 abstract public class ObjectFactory {
 
     private static AssetManager assetManager;
+    public static final float CRATE_SIZE = 0.5f;
     
     public static Spatial makeKey() {
         throw new UnsupportedOperationException("Not yet implemented");
@@ -32,19 +33,35 @@ abstract public class ObjectFactory {
     }
 
     public static Spatial makeFloor(int width) {
-        Geometry floor = new Geometry("Box", new Box(Vector3f.ZERO, width, 0.2f, width));
+        Geometry floor = new Geometry("Floor", new Box(width / 2, 0.25f, width / 2));
         Material floorMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
         floorMat.setColor("Color", ColorRGBA.Gray);
         floor.setMaterial(floorMat);
         return floor;
     }
     
-    public static Spatial makeBlock(int width, int height) {
-        Geometry block = new Geometry("Box", new Box(Vector3f.ZERO, width, height, width));
+    public static Spatial makeCeiling(int width) {
+        Geometry ceiling = new Geometry("Ceiling", new Box(width / 2, 0.25f, width / 2));
+        Material ceilingMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        ceilingMat.setColor("Color", ColorRGBA.Gray);
+        ceiling.setMaterial(ceilingMat);
+        return ceiling;
+    }
+    
+    public static Spatial makeBlock(int width, int height, String id) {
+        Geometry block = new Geometry("Block" + id, new Box(width / 2, height / 2, width / 2));
         Material blockMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-        blockMat.setColor("Color", ColorRGBA.Blue);
+        blockMat.setColor("Color", ColorRGBA.randomColor());
         block.setMaterial(blockMat);
         return block;
+    }
+    
+    public static Spatial makeDecoration() {
+        Geometry decoration = new Geometry("Crate", new Box(CRATE_SIZE, CRATE_SIZE, CRATE_SIZE));
+        Material decorationMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        decorationMat.setColor("Color", ColorRGBA.White);
+        decoration.setMaterial(decorationMat);
+        return decoration;
     }
 
     public static Spatial makeDoor() {
