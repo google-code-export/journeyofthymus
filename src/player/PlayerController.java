@@ -31,7 +31,7 @@ public class PlayerController extends CharacterControl implements ActionListener
     private int health, invHealthPotion, invSpeedPot, invOil, invTinder, regenAmount;
     private float regenRate, regenTimer, runSpeed;
     private float sprintTimer, speedPotionTimer, bootsCooldownTimer;
-    private boolean canSprint, crouching, sprinting, speedPotionStatus, bootsCooldown;
+    private boolean canSprint, sprinting, speedPotionStatus, bootsCooldown;
     private boolean left, right, forward, backward;
     private Torch torch;
     private Camera cam;
@@ -39,15 +39,14 @@ public class PlayerController extends CharacterControl implements ActionListener
 
     public PlayerController(ApplicationInterface app) {
         super(new CapsuleCollisionShape(0.4f, 1.5f, 1), 1f);
-        health = 100;
+        health = 5;
         runSpeed = 0.15f;
         regenRate = 15;
         regenAmount = 1;
-        
+
         cam = app.getCamera();
         inputManager = app.getInputManager();
         setupKeys();
-        
         torch = new Torch(new BoxCollisionShape(new Vector3f(0.3f, 1, 0.3f)));
     }
 
@@ -160,7 +159,7 @@ public class PlayerController extends CharacterControl implements ActionListener
 
     private void useTinder() {
         if (isPositiveInventory(ItemType.TINDER)) {
-            if(torch.getTinderTimer() < Torch.getMaxTinderTime()) {
+            if (torch.getTinderTimer() < Torch.getMaxTinderTime()) {
                 torch.setTinderTimer(Tinder.getExtensionTime());
                 --invTinder;
             }
@@ -169,10 +168,6 @@ public class PlayerController extends CharacterControl implements ActionListener
 
     private void worldInteract() {
         // world interaction method, like doors
-    }
-
-    private void doCrouchAnim() {
-        // do animation
     }
 
     public void enableSprint() {
@@ -232,7 +227,7 @@ public class PlayerController extends CharacterControl implements ActionListener
         Vector3f camDir = cam.getDirection().clone();
         Vector3f camLeft = cam.getLeft().clone();
         walkDirection.set(0, 0, 0);
-        
+
         if (left) {
             walkDirection.addLocal(camLeft);
         }
@@ -245,22 +240,20 @@ public class PlayerController extends CharacterControl implements ActionListener
         if (backward) {
             walkDirection.addLocal(camDir.negate());
         }
+
         walkDirection.normalizeLocal().multLocal(runSpeed);
         walkDirection.y = 0;
-        setWalkDirection(walkDirection); 
+        setWalkDirection(walkDirection);
     }
-    
+
     private void updateCamera() {
         Vector3f eyeHeight = getPhysicsLocation();
+        eyeHeight.y = 0.6f;
+
         cam.setLocation(eyeHeight);
-        
-        if(crouching) {
-            eyeHeight.y = 0.3f;
-        } else {
-            eyeHeight.y = 0.8f;
-        }
         //eyeHeight.addLocal(camDir.negate().multLocal(0.3f));
     }
+
     @Override
     public void update(float tpf) {
         if (health <= 0 || health != 100) {
@@ -278,7 +271,9 @@ public class PlayerController extends CharacterControl implements ActionListener
 
         updateMovement();
         updateCamera();
-        System.out.println(cam.getLocation());
+        torch.update(tpf);
+        System.out.println(getPhysicsLocation() + " " + torch.getTinderTimer());
+        
     }
 
     /*
@@ -295,16 +290,15 @@ public class PlayerController extends CharacterControl implements ActionListener
         inputManager.addMapping("Use_Oil", new KeyTrigger(KeyInput.KEY_3));
         inputManager.addMapping("Use_Tinder", new KeyTrigger(KeyInput.KEY_4));
         inputManager.addMapping("Sprint", new KeyTrigger(KeyInput.KEY_LSHIFT));
-        inputManager.addMapping("Crouch", new KeyTrigger(KeyInput.KEY_LCONTROL));
 
         inputManager.addListener(this, new String[]{
                     "Left", "Right", "Forward", "Backward", "Use", "Use_HP", "Use_SP",
-                    "Use_Oil", "Use_Tinder", "Sprint", "Crouch"
-                });
+                    "Use_Oil", "Use_Tinder", "Sprint"
+        });
     }
 
     @Override
-    public void onAction(String name, boolean isPressed, float tpf) {           
+    public void onAction(String name, boolean isPressed, float tpf) {
         if (this.isEnabled()) {
             switch (name) {
                 case "Left":
@@ -319,13 +313,10 @@ public class PlayerController extends CharacterControl implements ActionListener
                 case "Backward":
                     backward = isPressed;
                     break;
-                case "Crouch":
-                    crouching = isPressed;
-                    break;
             }
-            
-            if(isPressed) {
-                switch(name) {
+
+            if (isPressed) {
+                switch (name) {
                     case "Use":
                         worldInteract();
                         break;
@@ -335,17 +326,14 @@ public class PlayerController extends CharacterControl implements ActionListener
                     case "Use_SP":
                         usePotion(ItemType.SPEEDPOTION);
                         break;
-                    case "Use Oil":
+                    case "Use_Oil":
                         useOil();
                         break;
-                    case "Use Tinder":
+                    case "Use_Tinder":
                         useTinder();
                         break;
                     case "Sprint":
                         useBoots();
-                        break;
-                    case "Crouch":
-                        doCrouchAnim();
                         break;
                 }
             }

@@ -42,4 +42,16 @@ public class Torch extends RigidBodyControl {
     public void setTinderTimer(float modifier) {
         tinderTimer += (tinderTimer + modifier > tinderTimerMax) ? tinderTimerMax - tinderTimer : modifier;
     }
+
+    @Override
+    public void update(float tpf) {
+        super.update(tpf);
+        if(oilTimer > 0) {
+            oilTimer -= tpf;
+        }
+        if(tinderTimer > 0) {
+            tinderTimer -= tpf;
+        }
+    }
+    
 }

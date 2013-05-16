@@ -1,6 +1,7 @@
 package items;
 
 import com.jme3.bullet.BulletAppState;
+import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.PhysicsCollisionEvent;
 import com.jme3.bullet.collision.PhysicsCollisionListener;
 import com.jme3.bullet.collision.shapes.CollisionShape;
@@ -25,9 +26,9 @@ public class ItemController extends RigidBodyControl implements PhysicsCollision
     private boolean taken;
     private Item itemReference;
     
-    public ItemController(CollisionShape shape, float mass, BulletAppState bulletAppState, ItemType type) {
+    public ItemController(CollisionShape shape, float mass, PhysicsSpace physicsSpace, ItemType type) {
         super(shape, mass);
-        bulletAppState.getPhysicsSpace().addCollisionListener(this);
+        physicsSpace.addCollisionListener(this);
         taken = false;
         
         switch(type) {
@@ -89,8 +90,6 @@ public class ItemController extends RigidBodyControl implements PhysicsCollision
             itemSpatial.removeFromParent();
             getPhysicsSpace().remove(item);
         }
-        
-        
     }
     
     public Item getItemReference() {

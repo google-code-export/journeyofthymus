@@ -13,18 +13,17 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
 public class MapFileReader {
 
     public enum Direction {
-
         Up, Down, Left, Right
     };
     private static int dimX = 0, dimY = 0;
     private static Tile[][] tiles = null;
     private static Tile[][] cleanMap = null;
+    private static ArrayList<Direction> edges;
 
     public static Tile[][] loadMap(String name) {
 
@@ -63,9 +62,6 @@ public class MapFileReader {
         readMap(name);
         // redundancy parse
         tiles = clean();
-        // add decorations to array
-        decorate();
-        // result = clean and decorated map ready for build
         return tiles;
     }
 
@@ -111,12 +107,11 @@ public class MapFileReader {
     }
 
     private static Tile[][] clean() {
-
         int x, y;
-
+        
         for (y = 0; y < dimY; y++) {
             for (x = 0; x < dimX; x++) {
-                ArrayList<Direction> edges = edge(x, y);
+                edges = edge(x, y);
                 cleanMap[x][y].code = tiles[x][y].code;
                 if (edges.contains(Direction.Up)) {
                     if (!checkRedundancy(x, y - 1)) {
@@ -171,10 +166,6 @@ public class MapFileReader {
             default:
                 return false;
         }
-    }
-
-    private static void decorate() {
-        // random decorator - where there are blank spaces, randomly choose a decoration
     }
 
     public static int getDimensions() {
