@@ -29,7 +29,7 @@ public class PlayerController extends CharacterControl implements ActionListener
     private float regenRate, regenTimer, runSpeed;
     private float sprintTimer, speedPotionTimer, bootsCooldownTimer;
     private boolean canSprint, crouching, sprintingStatus, speedPotionStatus, bootsCooldown;
-    private boolean left, right, forward, backward;
+    private boolean space, left, right, forward, backward;
     private ApplicationInterface app;
     private Torch torchObj;
     private Vector3f eyeHeight;
@@ -224,6 +224,9 @@ public class PlayerController extends CharacterControl implements ActionListener
         Vector3f camDir = app.getCamera().getDirection().clone();
         Vector3f camLeft = app.getCamera().getLeft().clone();
         walkDirection.set(0, 0, 0);
+        if (space) {
+            walkDirection.set(0, 1, 0);
+        }
         if (left) {
             walkDirection.addLocal(camLeft);
         }
@@ -270,6 +273,7 @@ public class PlayerController extends CharacterControl implements ActionListener
      * Initializes the default player keyboard setup for Journey of Thymus
      */
     public void setupKeys() {
+        app.getInputManager().addMapping("Space", new KeyTrigger(KeyInput.KEY_SPACE));
         app.getInputManager().addMapping("Left", new KeyTrigger(KeyInput.KEY_A));
         app.getInputManager().addMapping("Right", new KeyTrigger(KeyInput.KEY_D));
         app.getInputManager().addMapping("Forward", new KeyTrigger(KeyInput.KEY_W));
@@ -283,7 +287,7 @@ public class PlayerController extends CharacterControl implements ActionListener
         app.getInputManager().addMapping("Crouch", new KeyTrigger(KeyInput.KEY_LCONTROL));
 
         app.getInputManager().addListener(this, new String[]{
-                    "Left", "Right", "Forward", "Backward", "Use", "Use_HP", "Use_SP",
+                    "Space", "Left", "Right", "Forward", "Backward", "Use", "Use_HP", "Use_SP",
                     "Use_Oil", "Use_Tinder", "Sprint", "Crouch"
                 });
     }
@@ -292,6 +296,9 @@ public class PlayerController extends CharacterControl implements ActionListener
     public void onAction(String name, boolean isPressed, float tpf) {
         if (this.isEnabled()) {
             switch (name) {
+                case "Space":
+                    space = isPressed;
+                    break;
                 case "Left":
                     left = isPressed;
                     break;
