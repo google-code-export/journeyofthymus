@@ -39,7 +39,7 @@ public class Main extends SimpleApplication implements ApplicationInterface {
         bulletAppState.getPhysicsSpace().enableDebug(assetManager);
         
     }
-
+    
     @Override
     public void simpleUpdate(float tpf) {
     }

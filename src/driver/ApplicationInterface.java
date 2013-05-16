@@ -4,6 +4,7 @@ import com.jme3.app.state.AppStateManager;
 import com.jme3.asset.AssetManager;
 import com.jme3.input.InputManager;
 import com.jme3.renderer.Camera;
+import com.jme3.renderer.ViewPort;
 import com.jme3.scene.Node;
 
 /**
@@ -17,5 +18,6 @@ public interface ApplicationInterface {
     public AssetManager getAssetManager();
     public InputManager getInputManager();
     public AppStateManager getStateManager();
+    public ViewPort getViewPort();
     public Camera getCamera();
 }

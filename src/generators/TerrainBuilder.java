@@ -7,6 +7,7 @@ import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.math.Vector3f;
+import com.jme3.renderer.queue.RenderQueue.ShadowMode;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import driver.ApplicationInterface;
@@ -26,14 +27,15 @@ public class TerrainBuilder {
     // for each tile,use a current position vector to place the correct model
     // move on to next tile and increment vector by fixed amount on X or Z
     private AssetManager assetManager;
-    private Node rootNode, mapNode, spawnPoint;
+    private Node lightNode, mapNode, spawnPoint;
     private PhysicsSpace physicsSpace;
-    private final int BLOCK_WIDTH = 2,
+    private final int BLOCK_WIDTH = 4,
             BLOCK_HEIGHT = 3;
 
-    public TerrainBuilder(ApplicationInterface app) {
+    public TerrainBuilder(ApplicationInterface app, Node mapNode) {
         this.assetManager = app.getAssetManager();
-        this.rootNode = app.getRootNode();
+        this.mapNode = mapNode;
+        lightNode = (Node) app.getRootNode().getChild("Light Node");
         physicsSpace = app.getStateManager().getState(BulletAppState.class).getPhysicsSpace();
     }
 
@@ -48,7 +50,6 @@ public class TerrainBuilder {
         Tile[][] map = new Map(MapFileReader.loadMap("assets/MapFiles/Labyrinth1.txt")).map;
         dimX = MapFileReader.getDimensions();
         ObjectFactory.setAssetManager(assetManager);
-        mapNode = new Node("Map");
 
         BufferedImage bitmap = new BufferedImage(dimX, dimX, BufferedImage.TYPE_INT_ARGB);
         Graphics g = bitmap.getGraphics();
@@ -59,6 +60,7 @@ public class TerrainBuilder {
                     case 'B':
                         block = ObjectFactory.makeBlock(BLOCK_WIDTH, BLOCK_HEIGHT, String.valueOf(iX) + String.valueOf(iY));
                         block.setLocalTranslation((BLOCK_WIDTH * iX), 0, (BLOCK_WIDTH * iY));
+                        block.setShadowMode(ShadowMode.CastAndReceive);
                         mapNode.attachChild(block);
                         g.setColor(Color.GRAY);
                         break;
@@ -83,6 +85,7 @@ public class TerrainBuilder {
         floor = ObjectFactory.makeFloor(dimX * BLOCK_WIDTH);
         floor.setLocalTranslation(dimX * BLOCK_WIDTH / 2 - (BLOCK_WIDTH / 2), -((BLOCK_HEIGHT / 2) + 0.25f), dimX * BLOCK_WIDTH / 2 - (BLOCK_WIDTH / 2));
         mapNode.attachChild(floor);
+        floor.setShadowMode(ShadowMode.Receive);
 
         CollisionShape labyrinthShape = CollisionShapeFactory.createMeshShape(mapNode);
         RigidBodyControl labyrinth = new RigidBodyControl(labyrinthShape, 0);
@@ -90,7 +93,7 @@ public class TerrainBuilder {
 
         physicsSpace.add(labyrinth);
 
-        rootNode.attachChild(mapNode);
+        lightNode.attachChild(mapNode);
     }
 
     public Vector3f getSpawnPoint() {
