@@ -7,6 +7,7 @@ import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.math.Vector3f;
+import com.jme3.renderer.queue.RenderQueue.ShadowMode;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import driver.ApplicationInterface;
@@ -28,8 +29,8 @@ public class TerrainBuilder {
     // for each tile,use a current position vector to place the correct model
     // move on to next tile and increment vector by fixed amount on X or Z
     private AssetManager assetManager;
-    private Node rootNode, mapNode, spawnPoint;
-    private PhysicsSpace bas;
+    private Node lightNode, mapNode, spawnPoint;
+    private PhysicsSpace physicsSpace;
     private final int BLOCK_WIDTH = 4,
             BLOCK_HEIGHT = 4,
             FLOOR_SEGMENTS = 4;
@@ -39,10 +40,11 @@ public class TerrainBuilder {
     private ArrayList<MapFileReader.Direction> decPlace;
     private Tile[][] map;
 
-    public TerrainBuilder(AssetManager assetManager, Node rootNode, ApplicationInterface app) {
-        this.assetManager = assetManager;
-        this.rootNode = rootNode;
-        bas = app.getStateManager().getState(BulletAppState.class).getPhysicsSpace();
+    public TerrainBuilder(ApplicationInterface app, Node mapNode) {
+        this.assetManager = app.getAssetManager();
+        this.mapNode = mapNode;
+        lightNode = (Node) app.getRootNode().getChild("Light Node");
+        physicsSpace = app.getStateManager().getState(BulletAppState.class).getPhysicsSpace();
     }
 
     public void buildMap() {
@@ -58,7 +60,6 @@ public class TerrainBuilder {
         map = new Map(MapFileReader.loadMap("assets/MapFiles/Labyrinth1.txt")).map;
         dimX = MapFileReader.getDimensions();
         ObjectFactory.setAssetManager(assetManager);
-        mapNode = new Node("Map");
 
         BufferedImage bitmap = new BufferedImage(dimX, dimX, BufferedImage.TYPE_INT_ARGB);
         Graphics g = bitmap.getGraphics();
@@ -68,9 +69,8 @@ public class TerrainBuilder {
                 switch (map[iX][iY].code) {
                     case 'B':
                         block = ObjectFactory.makeBlock(BLOCK_WIDTH, BLOCK_HEIGHT, String.valueOf(iX) + String.valueOf(iY));
-                        block.setLocalTranslation((BLOCK_WIDTH * iX),
-                                                    0,
-                                                    (BLOCK_WIDTH * iY));
+                        block.setLocalTranslation((BLOCK_WIDTH * iX), 0, (BLOCK_WIDTH * iY));
+                        block.setShadowMode(ShadowMode.CastAndReceive);
                         mapNode.attachChild(block);
                         g.setColor(Color.GRAY);
                         break;
@@ -85,7 +85,7 @@ public class TerrainBuilder {
                         break;
                     case ' ':
                         rand = new Random();
-                        if(rand.nextFloat() < DEC_CHANCE) {
+                        if (rand.nextFloat() < DEC_CHANCE) {
                             decoration = ObjectFactory.makeDecoration();
                             setOffset(decoration.getName(), iX, iY);
                             decoration.setLocalTranslation(offset);
@@ -99,32 +99,31 @@ public class TerrainBuilder {
                 g.drawRect(iX, iY, 1, 1);
             }
         }
-        
-        for(int i = 1; i < FLOOR_SEGMENTS; i += 2) {
-            for(int j = 1; j < FLOOR_SEGMENTS; j += 2) {
-              floor = ObjectFactory.makeFloor(dimX * BLOCK_WIDTH / 2);
+        for (int i = 1; i < FLOOR_SEGMENTS; i += 2) {
+            for (int j = 1; j < FLOOR_SEGMENTS; j += 2) {
+                floor = ObjectFactory.makeFloor(dimX * BLOCK_WIDTH / 2);
                 floor.setLocalTranslation(dimX * BLOCK_WIDTH * i / FLOOR_SEGMENTS - (BLOCK_WIDTH / 2),
-                                            -((BLOCK_HEIGHT / 2) + 0.25f), 
-                                            dimX * BLOCK_WIDTH * j / FLOOR_SEGMENTS - (BLOCK_WIDTH / 2));
+                        -((BLOCK_HEIGHT / 2) + 0.25f),
+                        dimX * BLOCK_WIDTH * j / FLOOR_SEGMENTS - (BLOCK_WIDTH / 2));
                 mapNode.attachChild(floor);
+                floor.setShadowMode(ShadowMode.Receive);
             }
         }
-        
         ceiling = ObjectFactory.makeCeiling(dimX * BLOCK_WIDTH);
-                ceiling.setLocalTranslation(dimX * BLOCK_WIDTH / 2 - (BLOCK_WIDTH / 2),
-                                            ((BLOCK_HEIGHT / 2) + 0.25f), 
-                                            dimX * BLOCK_WIDTH / 2- (BLOCK_WIDTH / 2));        
-                mapNode.attachChild(ceiling);
-        
+        ceiling.setLocalTranslation(dimX * BLOCK_WIDTH / 2 - (BLOCK_WIDTH / 2),
+                ((BLOCK_HEIGHT / 2) + 0.25f),
+                dimX * BLOCK_WIDTH / 2 - (BLOCK_WIDTH / 2));
+        mapNode.attachChild(ceiling);
+
         CollisionShape labyrinthShape = CollisionShapeFactory.createMeshShape(mapNode);
         RigidBodyControl labyrinth = new RigidBodyControl(labyrinthShape, 0);
         mapNode.addControl(labyrinth);
 
-        bas.add(labyrinth);
+        physicsSpace.add(labyrinth);
 
-        rootNode.attachChild(mapNode);
+        lightNode.attachChild(mapNode);
     }
-    
+
     private void setOffset(String decType, int x, int z) {
         Vector3f decSize = new Vector3f();
         decPlace = new ArrayList<>();
@@ -140,8 +139,8 @@ public class TerrainBuilder {
         if (map[x][z + 1].code == 'B') {
             decPlace.add(MapFileReader.Direction.Down);
         }
-        
-        switch(decType) {
+
+        switch (decType) {
             case "Crate":
                 decSize.x = ObjectFactory.CRATE_SIZE;
                 decSize.y = ObjectFactory.CRATE_SIZE / 2 + 0.25f;
@@ -152,54 +151,54 @@ public class TerrainBuilder {
             default:
                 break;
         }
-        
+
         getOffset(decSize, x, z);
     }
-    
+
     private void getOffset(Vector3f size, int x, int z) {
         float xOffset = 0, zOffset = 0;
         Random r = new Random();
         int side;
-        
-        if(decPlace.contains(MapFileReader.Direction.Left) && decPlace.contains(MapFileReader.Direction.Down)) {
+
+        if (decPlace.contains(MapFileReader.Direction.Left) && decPlace.contains(MapFileReader.Direction.Down)) {
             xOffset = -(BLOCK_WIDTH / 2) + (size.x / 2);
             zOffset = -(BLOCK_WIDTH / 2) + (size.z / 2);
-        } else if(decPlace.contains(MapFileReader.Direction.Left) && decPlace.contains(MapFileReader.Direction.Up)) {
+        } else if (decPlace.contains(MapFileReader.Direction.Left) && decPlace.contains(MapFileReader.Direction.Up)) {
             xOffset = -(BLOCK_WIDTH / 2) + (size.x / 2);
-            zOffset =  (BLOCK_WIDTH / 2) - (size.z / 2);
-        } else if(decPlace.contains(MapFileReader.Direction.Left) && decPlace.contains(MapFileReader.Direction.Right)) {
+            zOffset = (BLOCK_WIDTH / 2) - (size.z / 2);
+        } else if (decPlace.contains(MapFileReader.Direction.Left) && decPlace.contains(MapFileReader.Direction.Right)) {
             side = r.nextInt(2);
-            switch(side) {
+            switch (side) {
                 case 0:
                     xOffset = -(BLOCK_WIDTH / 2) + (size.x / 2);
                     break;
                 case 1:
-                    xOffset =  (BLOCK_WIDTH / 2) + (size.x / 2);
+                    xOffset = (BLOCK_WIDTH / 2) + (size.x / 2);
                     break;
             }
             zOffset = 0;
-        } else if(decPlace.contains(MapFileReader.Direction.Right) && decPlace.contains(MapFileReader.Direction.Down)) {
-            xOffset =  (BLOCK_WIDTH / 2) + (size.x / 2);
+        } else if (decPlace.contains(MapFileReader.Direction.Right) && decPlace.contains(MapFileReader.Direction.Down)) {
+            xOffset = (BLOCK_WIDTH / 2) + (size.x / 2);
             zOffset = -(BLOCK_WIDTH / 2) + (size.z / 2);
-        } else if(decPlace.contains(MapFileReader.Direction.Right) && decPlace.contains(MapFileReader.Direction.Up)) {
-            xOffset =  (BLOCK_WIDTH / 2) + (size.x / 2);
-            zOffset =  (BLOCK_WIDTH / 2) + (size.z / 2);
-        } else if(decPlace.contains(MapFileReader.Direction.Down) && decPlace.contains(MapFileReader.Direction.Up)) {
+        } else if (decPlace.contains(MapFileReader.Direction.Right) && decPlace.contains(MapFileReader.Direction.Up)) {
+            xOffset = (BLOCK_WIDTH / 2) + (size.x / 2);
+            zOffset = (BLOCK_WIDTH / 2) + (size.z / 2);
+        } else if (decPlace.contains(MapFileReader.Direction.Down) && decPlace.contains(MapFileReader.Direction.Up)) {
             side = r.nextInt(2);
-            switch(side) {
+            switch (side) {
                 case 0:
                     zOffset = -(BLOCK_WIDTH / 2) + (size.z / 2);
                     break;
                 case 1:
-                    zOffset =  (BLOCK_WIDTH / 2) + (size.z / 2);
+                    zOffset = (BLOCK_WIDTH / 2) + (size.z / 2);
                     break;
             }
             xOffset = 0;
         }
-        
-        offset = new Vector3f((BLOCK_WIDTH * x) + xOffset, 
-                             -(BLOCK_WIDTH / 2) + size.y, 
-                              (BLOCK_WIDTH * z) + zOffset);
+
+        offset = new Vector3f((BLOCK_WIDTH * x) + xOffset,
+                -(BLOCK_WIDTH / 2) + size.y,
+                (BLOCK_WIDTH * z) + zOffset);
     }
 
     public Vector3f getSpawnPoint() {
