@@ -18,6 +18,7 @@ import com.jme3.scene.shape.Box;
 abstract public class ObjectFactory {
 
     private static AssetManager assetManager;
+    public static final float CRATE_SIZE = 0.5f;
     
     public static Spatial makeKey() {
         throw new UnsupportedOperationException("Not yet implemented");
@@ -43,6 +44,14 @@ abstract public class ObjectFactory {
         return floor;
     }
     
+    public static Spatial makeCeiling(int width) {
+        Geometry ceiling = new Geometry("Ceiling", new Box(width / 2, 0.25f, width / 2));
+        Material ceilingMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        ceilingMat.setColor("Color", ColorRGBA.Gray);
+        ceiling.setMaterial(ceilingMat);
+        return ceiling;
+    }
+    
     public static Spatial makeBlock(int width, int height, String id) {
         Geometry block = new Geometry("Block" + id, new Box(width / 2, height / 2, width / 2));
         Material blockMat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
@@ -54,6 +63,14 @@ abstract public class ObjectFactory {
         block.setMaterial(blockMat);
 
         return block;
+    }
+    
+    public static Spatial makeDecoration() {
+        Geometry decoration = new Geometry("Crate", new Box(CRATE_SIZE, CRATE_SIZE, CRATE_SIZE));
+        Material decorationMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        decorationMat.setColor("Color", ColorRGBA.White);
+        decoration.setMaterial(decorationMat);
+        return decoration;
     }
 
     public static Spatial makeDoor() {
