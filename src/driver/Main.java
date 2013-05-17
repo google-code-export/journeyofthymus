@@ -5,11 +5,13 @@ import com.jme3.bullet.BulletAppState;
 import com.jme3.renderer.Camera;
 import com.jme3.renderer.RenderManager;
 import com.jme3.system.AppSettings;
+import gui.GUI;
 import states.GameState;
 import states.MenuState;
 
 public class Main extends SimpleApplication implements ApplicationInterface {
 
+    private GUI guiController;
     private MenuState menuState;
     private GameState gameState;
     private BulletAppState bulletAppState;
@@ -27,6 +29,7 @@ public class Main extends SimpleApplication implements ApplicationInterface {
 
     @Override
     public void simpleInitApp() {
+        //guiController = new GUI(this);
         bulletAppState = new BulletAppState();
         menuState = new MenuState();
         gameState = new GameState(this);
