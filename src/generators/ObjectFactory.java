@@ -31,19 +31,18 @@ abstract public class ObjectFactory {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
-    public static Spatial makeFloor(int width) {
+    public static Spatial makeFloor(float width) {
         Geometry floor = new Geometry("Floor", new Box(width / 2, 0.25f, width / 2));
         Material floorMat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
         floorMat.setBoolean("UseMaterialColors", true);
         ColorRGBA color = ColorRGBA.randomColor();
         floorMat.setColor("Diffuse", color);
         floorMat.setColor("Ambient", color);
-        //floorMat.setColor("Color", ColorRGBA.Gray);
         floor.setMaterial(floorMat);
         return floor;
     }
 
-    public static Spatial makeCeiling(int width) {
+    public static Spatial makeCeiling(float width) {
         Geometry ceiling = new Geometry("Ceiling", new Box(width / 2, 0.25f, width / 2));
         Material ceilingMat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
         ceilingMat.setBoolean("UseMaterialColors", true);
@@ -54,7 +53,7 @@ abstract public class ObjectFactory {
         return ceiling;
     }
 
-    public static Spatial makeBlock(int width, int height, String id) {
+    public static Spatial makeBlock(float width, float height, String id) {
         Geometry block = new Geometry("Block" + id, new Box(width / 2, height / 2, width / 2));
         Material blockMat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
         blockMat.setBoolean("UseMaterialColors", true);

@@ -1,6 +1,5 @@
 package player;
 
-import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
 import com.jme3.bullet.control.CharacterControl;
 import com.jme3.input.InputManager;
@@ -9,13 +8,12 @@ import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
+import com.jme3.scene.Node;
 import driver.ApplicationInterface;
 import items.Boots;
 import items.ItemType;
-import items.Oil;
 import items.Potion;
-import items.Tinder;
-import items.Torch;
+import items.TorchController;
 
 /**
  * Object establishes attributes of the human controlled character, including
@@ -33,21 +31,21 @@ public class PlayerController extends CharacterControl implements ActionListener
     private float sprintTimer, speedPotionTimer, bootsCooldownTimer;
     private boolean canSprint, sprinting, speedPotionStatus, bootsCooldown;
     private boolean left, right, forward, backward;
-    private Torch torch;
     private Camera cam;
     private InputManager inputManager;
+    private Node camNode;
 
-    public PlayerController(ApplicationInterface app) {
+    public PlayerController(ApplicationInterface app, Node camNode) {
         super(new CapsuleCollisionShape(0.4f, 1.5f, 1), 1f);
         health = 5;
         runSpeed = 0.15f;
         regenRate = 15;
         regenAmount = 1;
 
+        this.camNode = camNode;
         cam = app.getCamera();
         inputManager = app.getInputManager();
         setupKeys();
-        torch = new Torch(new BoxCollisionShape(new Vector3f(0.3f, 1, 0.3f)));
     }
 
     public int getHealth() {
@@ -148,24 +146,6 @@ public class PlayerController extends CharacterControl implements ActionListener
         }
     }
 
-    private void useOil() {
-        if (isPositiveInventory(ItemType.OIL)) {
-            if (torch.getOilTimer() < Torch.getMaxOilTime()) {
-                torch.setOilTimer(Oil.getExtensionTime());
-                --invOil;
-            }
-        }
-    }
-
-    private void useTinder() {
-        if (isPositiveInventory(ItemType.TINDER)) {
-            if (torch.getTinderTimer() < Torch.getMaxTinderTime()) {
-                torch.setTinderTimer(Tinder.getExtensionTime());
-                --invTinder;
-            }
-        }
-    }
-
     private void worldInteract() {
         // world interaction method, like doors
     }
@@ -175,7 +155,7 @@ public class PlayerController extends CharacterControl implements ActionListener
     }
 
     // Experiment with collection 
-    private boolean isPositiveInventory(ItemType type) {
+    public boolean isPositiveInventory(ItemType type) {
         if ((type == ItemType.HEALTHPOTION && invHealthPotion > 0)
                 || (type == ItemType.SPEEDPOTION && invSpeedPot > 0)
                 || (type == ItemType.OIL && invOil > 0)
@@ -244,6 +224,7 @@ public class PlayerController extends CharacterControl implements ActionListener
         walkDirection.normalizeLocal().multLocal(runSpeed);
         walkDirection.y = 0;
         setWalkDirection(walkDirection);
+
     }
 
     private void updateCamera() {
@@ -251,7 +232,6 @@ public class PlayerController extends CharacterControl implements ActionListener
         eyeHeight.y = 0.6f;
 
         cam.setLocation(eyeHeight);
-        //eyeHeight.addLocal(camDir.negate().multLocal(0.3f));
     }
 
     @Override
@@ -271,9 +251,6 @@ public class PlayerController extends CharacterControl implements ActionListener
 
         updateMovement();
         updateCamera();
-        torch.update(tpf);
-        System.out.println(getPhysicsLocation() + " " + torch.getTinderTimer());
-        
     }
 
     /*
@@ -327,10 +304,10 @@ public class PlayerController extends CharacterControl implements ActionListener
                         usePotion(ItemType.SPEEDPOTION);
                         break;
                     case "Use_Oil":
-                        useOil();
+                        camNode.getChild("Torch").getControl(TorchController.class).useOil();
                         break;
                     case "Use_Tinder":
-                        useTinder();
+                        camNode.getChild("Torch").getControl(TorchController.class).useTinder();
                         break;
                     case "Sprint":
                         useBoots();

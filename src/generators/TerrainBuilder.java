@@ -31,9 +31,9 @@ public class TerrainBuilder {
     private AssetManager assetManager;
     private Node lightNode, mapNode, spawnPoint;
     private PhysicsSpace physicsSpace;
-    private final int BLOCK_WIDTH = 4,
+    private final float BLOCK_WIDTH = 4,
             BLOCK_HEIGHT = 4,
-            FLOOR_SEGMENTS = 4;
+            SEGMENTS = 32;
     private float DEC_CHANCE = 0.2f;
     private Vector3f offset;
     private Random rand;
@@ -70,7 +70,7 @@ public class TerrainBuilder {
                     case 'B':
                         block = ObjectFactory.makeBlock(BLOCK_WIDTH, BLOCK_HEIGHT, String.valueOf(iX) + String.valueOf(iY));
                         block.setLocalTranslation((BLOCK_WIDTH * iX), 0, (BLOCK_WIDTH * iY));
-                        block.setShadowMode(ShadowMode.CastAndReceive);
+                        block.setShadowMode(ShadowMode.Off);
                         mapNode.attachChild(block);
                         g.setColor(Color.GRAY);
                         break;
@@ -89,6 +89,7 @@ public class TerrainBuilder {
                             decoration = ObjectFactory.makeDecoration();
                             setOffset(decoration.getName(), iX, iY);
                             decoration.setLocalTranslation(offset);
+                            decoration.setShadowMode(ShadowMode.Off);
                             mapNode.attachChild(decoration);
                         }
                         g.setColor(Color.BLACK);
@@ -99,22 +100,30 @@ public class TerrainBuilder {
                 g.drawRect(iX, iY, 1, 1);
             }
         }
-        for (int i = 1; i < FLOOR_SEGMENTS; i += 2) {
-            for (int j = 1; j < FLOOR_SEGMENTS; j += 2) {
-                floor = ObjectFactory.makeFloor(dimX * BLOCK_WIDTH / 2);
-                floor.setLocalTranslation(dimX * BLOCK_WIDTH * i / FLOOR_SEGMENTS - (BLOCK_WIDTH / 2),
+        
+        for (float i = 1; i < SEGMENTS; i += 2) {
+            for (float j = 1; j < SEGMENTS; j += 2) {
+                floor = ObjectFactory.makeFloor(dimX * BLOCK_WIDTH / (SEGMENTS / 2));
+                floor.setLocalTranslation(dimX * BLOCK_WIDTH * i / SEGMENTS - (BLOCK_WIDTH / 2),
                         -((BLOCK_HEIGHT / 2) + 0.25f),
-                        dimX * BLOCK_WIDTH * j / FLOOR_SEGMENTS - (BLOCK_WIDTH / 2));
+                        dimX * BLOCK_WIDTH * j / SEGMENTS - (BLOCK_WIDTH / 2));
+                floor.setShadowMode(ShadowMode.Off);
                 mapNode.attachChild(floor);
-                floor.setShadowMode(ShadowMode.Receive);
+
             }
         }
-        ceiling = ObjectFactory.makeCeiling(dimX * BLOCK_WIDTH);
-        ceiling.setLocalTranslation(dimX * BLOCK_WIDTH / 2 - (BLOCK_WIDTH / 2),
-                ((BLOCK_HEIGHT / 2) + 0.25f),
-                dimX * BLOCK_WIDTH / 2 - (BLOCK_WIDTH / 2));
-        mapNode.attachChild(ceiling);
-
+        
+        for (float i = 1; i < SEGMENTS; i += 2) {
+            for (float j = 1; j < SEGMENTS; j += 2) {
+                ceiling = ObjectFactory.makeCeiling(dimX * BLOCK_WIDTH / (SEGMENTS / 2));
+                ceiling.setLocalTranslation(dimX * BLOCK_WIDTH * i / SEGMENTS - (BLOCK_WIDTH / 2),
+                        ((BLOCK_HEIGHT / 2) + 0.25f),
+                        dimX * BLOCK_WIDTH * j / SEGMENTS - (BLOCK_WIDTH / 2));
+                ceiling.setShadowMode(ShadowMode.Off);
+                mapNode.attachChild(ceiling);
+            }
+        }
+        
         CollisionShape labyrinthShape = CollisionShapeFactory.createMeshShape(mapNode);
         RigidBodyControl labyrinth = new RigidBodyControl(labyrinthShape, 0);
         mapNode.addControl(labyrinth);
