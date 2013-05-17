@@ -182,16 +182,18 @@ public class TerrainBuilder {
             } else if(decPlace.contains(MapFileReader.Direction.Up)) {
                 zOffset = (-BLOCK_WIDTH / 2) + (size.z);
             }
-        } else if(decPlace.contains(MapFileReader.Direction.Down)) {
-            zOffset = (BLOCK_WIDTH / 2) - (size.z);
-            if(decPlace.contains(MapFileReader.Direction.Up)) {
-                side = r.nextInt(2);
-                switch(side) {
-                    case 0:
-                        zOffset = (-BLOCK_WIDTH / 2) + (size.z);
-                        break;
-                    case 1:
-                        break;
+        } else { 
+            if(decPlace.contains(MapFileReader.Direction.Down)) {
+                zOffset = (BLOCK_WIDTH / 2) - (size.z);
+                if(decPlace.contains(MapFileReader.Direction.Up)) {
+                    side = r.nextInt(2);
+                    switch(side) {
+                        case 0:
+                            zOffset = (-BLOCK_WIDTH / 2) + (size.z);
+                            break;
+                        case 1:
+                            break;
+                    }
                 }
             }
         }
