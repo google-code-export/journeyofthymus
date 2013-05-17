@@ -68,9 +68,7 @@ public class TerrainBuilder {
                 switch (map[iX][iY].code) {
                     case 'B':
                         block = ObjectFactory.makeBlock(BLOCK_WIDTH, BLOCK_HEIGHT, String.valueOf(iX) + String.valueOf(iY));
-                        block.setLocalTranslation((BLOCK_WIDTH * iX),
-                                                    0,
-                                                    (BLOCK_WIDTH * iY));
+                        block.setLocalTranslation((BLOCK_WIDTH * iX), 0, (BLOCK_WIDTH * iY));
                         mapNode.attachChild(block);
                         g.setColor(Color.GRAY);
                         break;
@@ -87,7 +85,7 @@ public class TerrainBuilder {
                         rand = new Random();
                         if(rand.nextFloat() < DEC_CHANCE) {
                             decoration = ObjectFactory.makeDecoration();
-                            setOffset(decoration.getName(), iX, iY);
+                            placeDec(decoration.getName(), iX, iY);
                             decoration.setLocalTranslation(offset);
                             mapNode.attachChild(decoration);
                         }
@@ -125,7 +123,7 @@ public class TerrainBuilder {
         rootNode.attachChild(mapNode);
     }
     
-    private void setOffset(String decType, int x, int z) {
+    private void placeDec(String decType, int x, int z) {
         Vector3f decSize = new Vector3f();
         decPlace = new ArrayList<>();
         if (map[x - 1][z].code == 'B') {
@@ -147,8 +145,6 @@ public class TerrainBuilder {
                 decSize.y = ObjectFactory.CRATE_SIZE / 2 + 0.25f;
                 decSize.z = ObjectFactory.CRATE_SIZE;
                 break;
-            case "Jug":
-                break;
             default:
                 break;
         }
@@ -161,42 +157,44 @@ public class TerrainBuilder {
         Random r = new Random();
         int side;
         
-        if(decPlace.contains(MapFileReader.Direction.Left) && decPlace.contains(MapFileReader.Direction.Down)) {
-            xOffset = -(BLOCK_WIDTH / 2) + (size.x / 2);
-            zOffset = -(BLOCK_WIDTH / 2) + (size.z / 2);
-        } else if(decPlace.contains(MapFileReader.Direction.Left) && decPlace.contains(MapFileReader.Direction.Up)) {
-            xOffset = -(BLOCK_WIDTH / 2) + (size.x / 2);
-            zOffset =  (BLOCK_WIDTH / 2) - (size.z / 2);
-        } else if(decPlace.contains(MapFileReader.Direction.Left) && decPlace.contains(MapFileReader.Direction.Right)) {
-            side = r.nextInt(2);
-            switch(side) {
-                case 0:
-                    xOffset = -(BLOCK_WIDTH / 2) + (size.x / 2);
-                    break;
-                case 1:
-                    xOffset =  (BLOCK_WIDTH / 2) + (size.x / 2);
-                    break;
+        if(decPlace.contains(MapFileReader.Direction.Left)) { 
+            xOffset = (-BLOCK_WIDTH / 2) + (size.x);
+            if(decPlace.contains(MapFileReader.Direction.Down)) {
+                zOffset = (BLOCK_WIDTH / 2) - (size.z);
             }
-            zOffset = 0;
-        } else if(decPlace.contains(MapFileReader.Direction.Right) && decPlace.contains(MapFileReader.Direction.Down)) {
-            xOffset =  (BLOCK_WIDTH / 2) + (size.x / 2);
-            zOffset = -(BLOCK_WIDTH / 2) + (size.z / 2);
-        } else if(decPlace.contains(MapFileReader.Direction.Right) && decPlace.contains(MapFileReader.Direction.Up)) {
-            xOffset =  (BLOCK_WIDTH / 2) + (size.x / 2);
-            zOffset =  (BLOCK_WIDTH / 2) + (size.z / 2);
-        } else if(decPlace.contains(MapFileReader.Direction.Down) && decPlace.contains(MapFileReader.Direction.Up)) {
-            side = r.nextInt(2);
-            switch(side) {
-                case 0:
-                    zOffset = -(BLOCK_WIDTH / 2) + (size.z / 2);
-                    break;
-                case 1:
-                    zOffset =  (BLOCK_WIDTH / 2) + (size.z / 2);
-                    break;
+            else if(decPlace.contains(MapFileReader.Direction.Up)) {
+                zOffset = (-BLOCK_WIDTH / 2) + (size.z);
             }
-            xOffset = 0;
+            else if(decPlace.contains(MapFileReader.Direction.Right)) {
+                side = r.nextInt(2);
+                switch(side) {
+                    case 0:
+                        xOffset = (BLOCK_WIDTH / 2) - (size.x);
+                        break;
+                    case 1:
+                        break;
+                }
+            }
+        } else if(decPlace.contains(MapFileReader.Direction.Right)) { 
+            xOffset = (BLOCK_WIDTH / 2) - (size.x);
+            if(decPlace.contains(MapFileReader.Direction.Down)) {
+                zOffset = (BLOCK_WIDTH / 2) - (size.z);
+            } else if(decPlace.contains(MapFileReader.Direction.Up)) {
+                zOffset = (-BLOCK_WIDTH / 2) + (size.z);
+            }
+        } else if(decPlace.contains(MapFileReader.Direction.Down)) {
+            zOffset = (BLOCK_WIDTH / 2) - (size.z);
+            if(decPlace.contains(MapFileReader.Direction.Up)) {
+                side = r.nextInt(2);
+                switch(side) {
+                    case 0:
+                        zOffset = (-BLOCK_WIDTH / 2) + (size.z);
+                        break;
+                    case 1:
+                        break;
+                }
+            }
         }
-        
         offset = new Vector3f((BLOCK_WIDTH * x) + xOffset, 
                              -(BLOCK_WIDTH / 2) + size.y, 
                               (BLOCK_WIDTH * z) + zOffset);
