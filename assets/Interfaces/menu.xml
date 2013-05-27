@@ -21,13 +21,13 @@
                 </panel>
                 <panel id="panelExit" height="25%" width="100%" align="center" childLayout="center" backgroundColor="#f008">  
                     <control name="button" label="Exit" id="exitButton" align="center" valign="center">
-                        <interact onClick="quitGame()" />
+                        <interact onClick="quit()" />
                     </control>
                 </panel>
             </panel>
         </layer>
     </screen>
-    <screen id="hud">
+    <screen id="hud" controller="states.GameState">
         <!-- ... -->
     </screen>
 </nifty>

@@ -6,7 +6,6 @@ import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.screen.Screen;
 import de.lessvoid.nifty.screen.ScreenController;
 import driver.GameController;
-import driver.ThymusApplication;
 
 /**
  *
@@ -22,6 +21,10 @@ public class MenuState extends AbstractAppState implements ScreenController {
     
     public void start(String nextScreen) {
         gameController.startGame(nextScreen);
+    }
+    
+    public void quit() {
+        gameController.quitGame();
     }
     
     @Override

@@ -38,6 +38,7 @@ public class TerrainBuilder {
     private Random rand;
     private ArrayList<MapFileReader.Direction> decPlace;
     private Tile[][] map;
+    Graphics g;
 
     public TerrainBuilder(AssetManager assetManager, Node rootNode, ApplicationInterface app) {
         this.assetManager = assetManager;
@@ -61,7 +62,7 @@ public class TerrainBuilder {
         mapNode = new Node("Map");
 
         BufferedImage bitmap = new BufferedImage(dimX, dimX, BufferedImage.TYPE_INT_ARGB);
-        Graphics g = bitmap.getGraphics();
+        g = bitmap.getGraphics();
 
         for (iY = 0; iY < dimX; iY++) {
             for (iX = 0; iX < dimX; iX++) {

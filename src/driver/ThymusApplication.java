@@ -44,21 +44,6 @@ public class ThymusApplication extends SimpleApplication implements ApplicationI
     }
 
     @Override
-    public void startGame(String nextScreen) {
-        nifty.gotoScreen(nextScreen);
-        inputManager.setCursorVisible(false);
-        bulletAppState = new BulletAppState();
-        gameState = new GameState(this);
-        stateManager.attach(bulletAppState);
-        stateManager.attach(gameState);
-        stateManager.detach(menuState);
-        flyCam.setMoveSpeed(30);
-        //cam.setFrustumNear(0.3f);
-        //cam.setFrustumFar(10f);
-        bulletAppState.getPhysicsSpace().enableDebug(assetManager);
-    }
-
-    @Override
     public void simpleInitApp() {
         initializeGUI();
     }
@@ -78,7 +63,31 @@ public class ThymusApplication extends SimpleApplication implements ApplicationI
     }
 
     @Override
-    public void quitgame() {
+    public void startGame(String nextScreen) {
+        nifty.gotoScreen(nextScreen);
+        flyCam.setEnabled(true);
+        inputManager.setCursorVisible(false);
+        bulletAppState = new BulletAppState();
+        gameState = new GameState(this);
+        stateManager.attach(bulletAppState);
+        stateManager.attach(gameState);
+        stateManager.detach(menuState);
+        flyCam.setMoveSpeed(30);
+        //cam.setFrustumNear(0.3f);
+        //cam.setFrustumFar(10f);
+        bulletAppState.getPhysicsSpace().enableDebug(assetManager);
+    }
+
+    @Override
+    public void pause() {
+    }
+
+    @Override
+    public void endGame() {
+    }
+
+    @Override
+    public void quitGame() {
         stop();
     }
 }

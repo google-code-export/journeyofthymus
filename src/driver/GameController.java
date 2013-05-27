@@ -11,5 +11,7 @@ package driver;
 public interface GameController {
 
     void startGame(String nextScreen);
-    void quitgame();
+    void pause();
+    void endGame();
+    void quitGame();
 }

@@ -6,6 +6,9 @@ import com.jme3.app.state.AppStateManager;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.scene.Node;
 import com.jme3.math.Vector3f;
+import de.lessvoid.nifty.Nifty;
+import de.lessvoid.nifty.screen.Screen;
+import de.lessvoid.nifty.screen.ScreenController;
 import driver.ApplicationInterface;
 import generators.TerrainBuilder;
 import player.PlayerController;
@@ -16,7 +19,7 @@ import player.PlayerController;
  * @since 21/03/2013
  * @version 0.00.01
  */
-public class GameState extends AbstractAppState {
+public class GameState extends AbstractAppState implements ScreenController {
 
     private PlayerController playerControl;
     private ApplicationInterface app;
@@ -57,6 +60,18 @@ public class GameState extends AbstractAppState {
     }
     
     public void initializeItems() {
+    }
+
+    @Override
+    public void bind(Nifty nifty, Screen screen) {
+    }
+
+    @Override
+    public void onStartScreen() {
+    }
+
+    @Override
+    public void onEndScreen() {
     }
     
 }
