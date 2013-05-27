@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nifty xmlns="http://nifty-gui.sourceforge.net/nifty-1.3.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://nifty-gui.sourceforge.net/nifty-1.3.xsd http://nifty-gui.sourceforge.net/nifty-1.3.xsd">
+<useStyles filename="nifty-default-styles.xml" />
+<useControls filename="nifty-default-controls.xml" />   
+    <screen id="start" controller="states.MenuState">
+        <layer id="background" backgroundColor="#0000">
+            <!-- ... -->
+        </layer>
+        <layer id="foreground" backgroundColor="#0000" childLayout="center">
+            <panel id="menu" height="100%" width="35%" align="center" childLayout="vertical" backgroundColor="#f008">  
+                <panel id="panelEmpty" height="25%" width="100%" align="center" childLayout="center" backgroundColor="#f008">  
+                </panel>
+                <panel id="panelPlay" height="25%" width="100%" align="center" childLayout="center" backgroundColor="#f008">  
+                    <control name="button" label="Play" id="playButton" align="center" valign="center" visibleToMouse="true">
+                        <interact onClick="start(hud)" />
+                    </control>
+                </panel>
+                <panel id="panelOptions" height="25%" width="100%" align="center" childLayout="center" backgroundColor="#f008">  
+                    <control name="button" label="Options" id="optionsButton" align="center" valign="center">
+                    </control>
+                </panel>
+                <panel id="panelExit" height="25%" width="100%" align="center" childLayout="center" backgroundColor="#f008">  
+                    <control name="button" label="Exit" id="exitButton" align="center" valign="center">
+                        <interact onClick="quitGame()" />
+                    </control>
+                </panel>
+            </panel>
+        </layer>
+    </screen>
+    <screen id="hud">
+        <!-- ... -->
+    </screen>
+</nifty>
