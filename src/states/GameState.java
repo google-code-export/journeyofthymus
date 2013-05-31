@@ -1,27 +1,35 @@
 package states;
 
+import ai.BansheeController;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
-import com.jme3.bullet.collision.shapes.CollisionShape;
+import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
+import com.jme3.bullet.collision.shapes.CompoundCollisionShape;
+import com.jme3.bullet.control.RigidBodyControl;
+import com.jme3.bullet.joints.ConeJoint;
+import com.jme3.bullet.joints.PhysicsJoint;
+import com.jme3.font.BitmapFont;
+import com.jme3.font.BitmapText;
 import com.jme3.input.ChaseCamera;
 import com.jme3.light.AmbientLight;
-import com.jme3.light.PointLight;
+import com.jme3.light.SpotLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.FXAAFilter;
-import com.jme3.post.ssao.SSAOFilter;
 import com.jme3.renderer.queue.RenderQueue.ShadowMode;
 import com.jme3.scene.CameraNode;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.control.CameraControl;
+import com.jme3.scene.debug.Arrow;
 import com.jme3.scene.shape.Box;
 import driver.ApplicationInterface;
 import generators.TerrainBuilder;
@@ -30,7 +38,6 @@ import items.ItemType;
 import items.TorchController;
 import player.PlayerController;
 
-    
 /**
  *
  * @author MIKUiqnw0
@@ -40,54 +47,64 @@ import player.PlayerController;
 public class GameState extends AbstractAppState {
 
     private ApplicationInterface app;
-    private PhysicsSpace physicsSpace;
     private TerrainBuilder terrainBuilder;
     private CameraNode camNode;
-    private Node playerNode, lightNode, mapNode;
-    private PointLight pointl;
+    private Node playerNode, lightNode, mapNode, itemNode;
+    BitmapText text;
 
     public GameState(ApplicationInterface app) {
         this.app = app;
     }
-    
+
     @Override
     public void initialize(AppStateManager stateManager, Application app) {
         super.initialize(stateManager, app);
-        physicsSpace = app.getStateManager().getState(BulletAppState.class).getPhysicsSpace();
+        initializeHUD();        
         initializeNodes();
-        initializeMap();    
+        initializeMap();
         initializeCamera();
         initializePlayer();
+        initializeAI();
         initializeItems();
         initializeLighting();
         initializePostProcessing();
     }
-    
+
     @Override
     public void update(float tpf) {
     }
-    
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+    private void initializeHUD() {
+        BitmapFont guiFont = app.getAssetManager().loadFont("Interface/Fonts/Default.fnt");
+        BitmapText debug = new BitmapText(guiFont, false);
+        debug.setName("debugline");
+        debug.setSize(guiFont.getCharSet().getRenderedSize());
+        debug.setLocalTranslation(300, debug.getLineHeight(), 0);
+        app.getGuiNode().attachChild(debug);
+        text = (BitmapText) this.app.getGuiNode().getChild("debugline");
+    }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     private void initializeNodes() {
         camNode = new CameraNode("Camera Node", app.getCamera());
         playerNode = new Node("Player");
         lightNode = new Node("Light Node");
         mapNode = new Node("Map Node");
+        itemNode = new Node("Item Node");
 
-        app.getRootNode().setShadowMode(ShadowMode.Off);
-        lightNode.setShadowMode(ShadowMode.Off);
-        mapNode.setShadowMode(ShadowMode.Off);
-
-        app.getRootNode().attachChild(camNode);
-        app.getRootNode().attachChild(playerNode);
+        lightNode.attachChild(playerNode);  
+        lightNode.attachChild(camNode);
+        lightNode.attachChild(itemNode);
         app.getRootNode().attachChild(lightNode);
     }
-    
+
     private void initializeMap() {
         terrainBuilder = new TerrainBuilder(app, mapNode);
         terrainBuilder.buildMap();
     }
-    
-    private void initializeCamera() {      
+
+    private void initializeCamera() {
         ChaseCamera chaseCam = new ChaseCamera(app.getCamera(), playerNode, app.getInputManager());
         camNode.setControlDir(CameraControl.ControlDirection.CameraToSpatial);
         chaseCam.setDefaultDistance(0.001f);
@@ -99,19 +116,20 @@ public class GameState extends AbstractAppState {
         chaseCam.setMaxVerticalRotation(FastMath.DEG_TO_RAD * 75);
         camNode.addControl(chaseCam);
     }
-    
-    private void initializePlayer() {        
+
+    private void initializePlayer() {
         PlayerController playerControl = new PlayerController(app, camNode);
-        playerControl.setGravity(0.001f);
         app.getStateManager().getState(BulletAppState.class).getPhysicsSpace().add(playerControl);
         playerNode.addControl(playerControl);
         playerControl.setPhysicsLocation(terrainBuilder.getSpawnPoint());
-        playerControl.enableSprint();
-                       
-        TorchController torchControl = new TorchController(playerControl, lightNode, app.getCamera());
+
+        TorchController torchControl = new TorchController(playerControl, lightNode, app);
         Geometry torch = new Geometry("Torch", new Box(.05f, .3f, .05f));
-        Material torchMat = new Material(app.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
-        torchMat.setColor("Color", ColorRGBA.White);
+        Material torchMat = new Material(app.getAssetManager(), "Common/MatDefs/Light/Lighting.j3md");
+        torchMat.setBoolean("UseMaterialColors",true);
+        torchMat.setColor("Diffuse", ColorRGBA.White);
+        torchMat.setColor("Ambient", ColorRGBA.White);
+        torchMat.setColor("Specular", ColorRGBA.White); 
         torch.setMaterial(torchMat);
         torch.addControl(torchControl);
         camNode.attachChild(torch);
@@ -119,42 +137,125 @@ public class GameState extends AbstractAppState {
         torch.setLocalTranslation(-.35f, -.2f, 1.29f);
     }
 
-    private void initializeItems() {
-        Geometry boxgeom = new Geometry("Item", new Box(0.2f, 0.2f, 0.2f));
-        Material mat = new Material(app.getAssetManager(), "Common/MatDefs/Light/Lighting.j3md");
-        mat.setBoolean("UseMaterialColors",true);
-        ColorRGBA color = ColorRGBA.randomColor();
-        mat.setColor("Diffuse", color);
-        mat.setColor("Ambient", color);
-        boxgeom.setMaterial(mat);
+    private void initializeAI() {
+        Node bansheeNode = (Node) app.getAssetManager().loadModel("Models/Oto/Oto.mesh.xml");
+        lightNode.attachChild(bansheeNode);
+        BansheeController bansheeControl = new BansheeController(playerNode.getControl(PlayerController.class), bansheeNode);
+        bansheeNode.addControl(bansheeControl);
+        app.getStateManager().getState(BulletAppState.class).getPhysicsSpace().add(bansheeControl);               
+        bansheeNode.setLocalScale(0.3f);
+        bansheeControl.setPhysicsLocation(new Vector3f(36f, 0.3f, 36f));
         
-        CollisionShape box = new BoxCollisionShape(new Vector3f(0.2f, 0.2f, 0.2f));
-        ItemController itemControl = new ItemController(box, 0.3f, app.getStateManager().getState(BulletAppState.class).getPhysicsSpace(), ItemType.OIL);
-        boxgeom.addControl(itemControl);
-        boxgeom.setShadowMode(ShadowMode.Off);
-        lightNode.attachChild(boxgeom);
+        Arrow faceDir = new Arrow(bansheeControl.getViewDirection());
+        Geometry g = new Geometry("Facedirection", faceDir);
+        Material mat = new Material(app.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
+        mat.getAdditionalRenderState().setWireframe(true);
+        mat.setColor("Color", ColorRGBA.Blue);
+        g.setMaterial(mat);
+        bansheeNode.attachChild(g);
+        
+        SpotLight dl = new SpotLight();
+        dl.setDirection(new Vector3f(0f, -0.01f, 0f).normalizeLocal());
+        dl.setPosition(new Vector3f(36f, 5f, 36f));
+        dl.setSpotOuterAngle(4f);
+        app.getRootNode().addLight(dl);
+    }
+    
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////
+    private void testRagdolls() {
+                Node shoulders = createLimb(0.1f, 0.2f, new Vector3f(0.00f, 1.5f, 0), true);
+        Node uArmL = createLimb(0.1f, 0.2f, new Vector3f(-0.75f, 0.8f, 0), false);
+        Node uArmR = createLimb(0.1f, 0.2f, new Vector3f(0.75f, 0.8f, 0), false);
+        Node lArmL = createLimb(0.1f, 0.2f, new Vector3f(-0.75f, -0.2f, 0), false);
+        Node lArmR = createLimb(0.1f, 0.2f, new Vector3f(0.75f, -0.2f, 0), false);
+        Node body = createLimb(0.1f, 0.2f, new Vector3f(0.00f, 0.5f, 0), false);
+        Node hips = createLimb(0.1f, 0.2f, new Vector3f(0.00f, -0.5f, 0), true);
+        Node uLegL = createLimb(0.1f, 0.2f, new Vector3f(-0.25f, -1.2f, 0), false);
+        Node uLegR = createLimb(0.1f, 0.2f, new Vector3f(0.25f, -1.2f, 0), false);
+        Node lLegL = createLimb(0.1f, 0.2f, new Vector3f(-0.25f, -2.2f, 0), false);
+        Node lLegR = createLimb(0.1f, 0.2f, new Vector3f(0.25f, -2.2f, 0), false);
+        
+        join(body,  shoulders, new Vector3f( 0.00f,  1.4f, 0));
+        join(body,       hips, new Vector3f( 0.00f, -0.5f, 0));
+        join(uArmL, shoulders, new Vector3f(-0.75f,  1.4f, 0));
+        join(uArmR, shoulders, new Vector3f( 0.75f,  1.4f, 0));
+        join(uArmL,     lArmL, new Vector3f(-0.75f,  0.4f, 0));
+        join(uArmR,     lArmR, new Vector3f( 0.75f,  0.4f, 0));
+        join(uLegL,      hips, new Vector3f(-0.25f, -0.5f, 0));
+        join(uLegR,      hips, new Vector3f( 0.25f, -0.5f, 0));
+        join(uLegL,     lLegL, new Vector3f(-0.25f, -1.7f, 0));
+        join(uLegR,     lLegR, new Vector3f( 0.25f, -1.7f, 0));
+        Node ragDoll = new Node("ragdoll");
+        ragDoll.attachChild(shoulders);
+        ragDoll.attachChild(body);
+        ragDoll.attachChild(hips);
+        ragDoll.attachChild(uArmL);
+        ragDoll.attachChild(uArmR);
+        ragDoll.attachChild(lArmL);
+        ragDoll.attachChild(lArmR);
+        ragDoll.attachChild(uLegL);
+        ragDoll.attachChild(uLegR);
+        ragDoll.attachChild(lLegL);
+        ragDoll.attachChild(lLegR);
+        app.getRootNode().attachChild(ragDoll);
+        app.getStateManager().getState(BulletAppState.class).getPhysicsSpace().addAll(ragDoll);    
+    }
+
+    private Node createLimb(float width, float height, Vector3f location, boolean rotate) {
+        int axis = rotate ? PhysicsSpace.AXIS_X : PhysicsSpace.AXIS_Y;
+        CapsuleCollisionShape shape = new CapsuleCollisionShape(width, height, axis);
+        Node node = new Node("Limb");
+        RigidBodyControl rigidBodyControl = new RigidBodyControl(shape, 1);
+        node.setLocalTranslation(location);
+        node.addControl(rigidBodyControl);
+        return node;
+    }
+    
+    private PhysicsJoint join(Node A, Node B, Vector3f connectionPoint) {
+        Vector3f pivotA = A.worldToLocal(connectionPoint, new Vector3f());
+        Vector3f pivotB = B.worldToLocal(connectionPoint, new Vector3f());
+        ConeJoint joint = new ConeJoint(A.getControl(RigidBodyControl.class),
+                                        B.getControl(RigidBodyControl.class),
+                                        pivotA, pivotB);
+        joint.setLimit(1f, 1f, 0);
+        return joint;
+    }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private void initializeItems() {
+        itemNode.setLocalTranslation(new Vector3f(8.015633f, 1.15746358f, 59.78405f));
+        Spatial healthpot = app.getAssetManager().loadModel("Models/health_flask.obj");
+        healthpot.setLocalScale(0.15f);
+        Material mat = new Material(app.getAssetManager(), "Common/MatDefs/Light/Lighting.j3md");
+        mat.setTexture("DiffuseMap", app.getAssetManager().loadTexture("Materials/health.jpg"));
+        healthpot.setMaterial(mat);
+
+        CompoundCollisionShape compound = new CompoundCollisionShape();
+        compound.addChildShape(new BoxCollisionShape(new Vector3f(0.25f, 0.27f, 0.25f)), new Vector3f(0, 0.27f, 0));
+        ItemController itemControl = new ItemController(compound, 0.3f, app, ItemType.OIL);
+        itemNode.addControl(itemControl);
+        itemNode.attachChild(healthpot);
+        healthpot.setShadowMode(ShadowMode.Cast);
         app.getStateManager().getState(BulletAppState.class).getPhysicsSpace().add(itemControl);
         itemControl.setPhysicsLocation(new Vector3f(8.015633f, 1.15746358f, 59.78405f));
-
     }
-    
+
     private void initializeLighting() {
         AmbientLight ambient = new AmbientLight();
-        ambient.setColor(ColorRGBA.White.mult(0.07f));
+        ambient.setColor(ColorRGBA.White.mult(0.01f));
         lightNode.addLight(ambient);
     }
-    
+
     private void initializePostProcessing() {
-         FilterPostProcessor fpp = new FilterPostProcessor(app.getAssetManager());
-         app.getViewPort().addProcessor(fpp);
-         
-        SSAOFilter ssaoFilter = new SSAOFilter(5.1f, 1.2f, 0.2f, 0.1f);
-        fpp.addFilter(ssaoFilter);
-        
+        FilterPostProcessor fpp = new FilterPostProcessor(app.getAssetManager());
+        app.getViewPort().addProcessor(fpp);
+
+//        SSAOFilter ssaoFilter = new SSAOFilter(5.1f, 1.2f, 0.2f, 0.1f);
+        //fpp.addFilter(ssaoFilter);
+
         FXAAFilter fxaaFilter = new FXAAFilter();
         fxaaFilter.setReduceMul(0.0f);
         fxaaFilter.setSubPixelShift(0.0f);
         fpp.addFilter(fxaaFilter);
     }
-
 }

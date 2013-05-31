@@ -27,7 +27,7 @@ import items.TorchController;
 public class PlayerController extends CharacterControl implements ActionListener {
 
     private int health, invHealthPotion, invSpeedPot, invOil, invTinder, regenAmount;
-    private float regenRate, regenTimer, runSpeed;
+    private float regenRate, regenTimer, moveSpeed;
     private float sprintTimer, speedPotionTimer, bootsCooldownTimer;
     private boolean canSprint, sprinting, speedPotionStatus, bootsCooldown;
     private boolean left, right, forward, backward;
@@ -36,12 +36,12 @@ public class PlayerController extends CharacterControl implements ActionListener
     private Node camNode;
 
     public PlayerController(ApplicationInterface app, Node camNode) {
-        super(new CapsuleCollisionShape(0.4f, 1.5f, 1), 1f);
-        health = 5;
-        runSpeed = 0.15f;
+        super(new CapsuleCollisionShape(0.4f, 1.5f, 1), 0.55f);
+        health = 100;
+        moveSpeed = 0.1f;
         regenRate = 15;
         regenAmount = 1;
-
+        
         this.camNode = camNode;
         cam = app.getCamera();
         inputManager = app.getInputManager();
@@ -68,8 +68,8 @@ public class PlayerController extends CharacterControl implements ActionListener
         return invTinder;
     }
 
-    public float getRunSpeed() {
-        return runSpeed;
+    public float getMoveSpeed() {
+        return moveSpeed;
     }
 
     public float getRegenRate() {
@@ -85,8 +85,8 @@ public class PlayerController extends CharacterControl implements ActionListener
         // Add validation
     }
 
-    public void setRunSpeed(float newRunSpeed) {
-        runSpeed = newRunSpeed;
+    public void setMoveSpeed(float newMoveSpeed) {
+        moveSpeed = newMoveSpeed;
     }
 
     public void setRegenRate(float newRegenRate) {
@@ -113,10 +113,6 @@ public class PlayerController extends CharacterControl implements ActionListener
         invTinder += modifier;
     }
 
-    public void initializeArms() {
-        //model loading here
-    }
-
     private void usePotion(ItemType type) {
         if (isPositiveInventory(type)) {
             switch (type) {
@@ -130,7 +126,7 @@ public class PlayerController extends CharacterControl implements ActionListener
                     }
                     break;
                 case SPEEDPOTION:
-                    runSpeed += Potion.getModifier(type);
+                    moveSpeed += Potion.getModifier(type);
                     --invSpeedPot;
                     speedPotionStatus = true;
                     break;
@@ -140,7 +136,7 @@ public class PlayerController extends CharacterControl implements ActionListener
 
     private void useBoots() {
         if (canSprint && !bootsCooldown) {
-            runSpeed += Boots.getModifier();
+            moveSpeed += Boots.getModifier();
             sprinting = true;
             bootsCooldown = true;
         }
@@ -178,7 +174,7 @@ public class PlayerController extends CharacterControl implements ActionListener
         if (sprintTimer < Boots.getSpeedTime()) {
             sprintTimer += tpf;
         } else {
-            runSpeed -= Boots.getModifier();
+            moveSpeed -= Boots.getModifier();
             sprinting = false;
             sprintTimer = 0;
         }
@@ -188,7 +184,7 @@ public class PlayerController extends CharacterControl implements ActionListener
         if (speedPotionTimer < Potion.getSpeedTime()) {
             speedPotionTimer += tpf;
         } else {
-            runSpeed -= Potion.getModifier(ItemType.SPEEDPOTION);
+            moveSpeed -= Potion.getModifier(ItemType.SPEEDPOTION);
             speedPotionStatus = false;
             speedPotionTimer = 0;
         }
@@ -221,7 +217,7 @@ public class PlayerController extends CharacterControl implements ActionListener
             walkDirection.addLocal(camDir.negate());
         }
 
-        walkDirection.normalizeLocal().multLocal(runSpeed);
+        walkDirection.normalizeLocal().multLocal(moveSpeed);
         walkDirection.y = 0;
         setWalkDirection(walkDirection);
 

@@ -8,7 +8,7 @@ package items;
  * @version 0.00.01
  */
 public class Boots extends Item {
-    private static final float speedModifier = 0.2f;
+    private static final float speedModifier = 0.08f;
     private static final float speedTime = 15;
     private static final float cooldown = 60;
     

@@ -11,7 +11,7 @@ package items;
 public class Potion extends Item {
 
     private static final float healthModifier = 20;
-    private static final float speedModifier = 0.15f;
+    private static final float speedModifier = 0.07f;
     private static final float speedTime = 10;
     
     public Potion(ItemType type) {

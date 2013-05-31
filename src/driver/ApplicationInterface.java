@@ -6,6 +6,7 @@ import com.jme3.input.InputManager;
 import com.jme3.renderer.Camera;
 import com.jme3.renderer.ViewPort;
 import com.jme3.scene.Node;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  *
@@ -15,9 +16,11 @@ import com.jme3.scene.Node;
  */
 public interface ApplicationInterface {
     public Node getRootNode();
+    public Node getGuiNode();
     public AssetManager getAssetManager();
     public InputManager getInputManager();
     public AppStateManager getStateManager();
     public ViewPort getViewPort();
     public Camera getCamera();
+    public ScheduledThreadPoolExecutor getExecutor();
 }

@@ -11,7 +11,7 @@ import com.jme3.scene.control.Control;
 
 /**
  *
- * @author
+ * @author James
  */
 public class SoundController extends AbstractControl {
 

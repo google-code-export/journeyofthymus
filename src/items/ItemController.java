@@ -8,6 +8,9 @@ import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.control.Control;
+import driver.ApplicationInterface;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import player.PlayerController;
 
 /**
@@ -25,10 +28,12 @@ public class ItemController extends RigidBodyControl implements PhysicsCollision
     
     private boolean taken;
     private Item itemReference;
+    private ScheduledThreadPoolExecutor executor;
     
-    public ItemController(CollisionShape shape, float mass, PhysicsSpace physicsSpace, ItemType type) {
+    public ItemController(CollisionShape shape, float mass, ApplicationInterface app, ItemType type) {
         super(shape, mass);
-        physicsSpace.addCollisionListener(this);
+        app.getStateManager().getState(BulletAppState.class).getPhysicsSpace().addCollisionListener(this);
+        executor = app.getExecutor();
         taken = false;
         
         switch(type) {
@@ -52,17 +57,29 @@ public class ItemController extends RigidBodyControl implements PhysicsCollision
     }
 
     @Override
-    public void collision(PhysicsCollisionEvent event) {
-        PlayerController player;
-        ItemController item;
-        if(!this.taken && (player = event.getNodeA().getControl(PlayerController.class)) != null) { 
-            if((item = event.getNodeB().getControl(ItemController.class)) != null) {
-                takeItem(player, item, event.getNodeB(), item.getItemReference().getItemType());
+    public void collision(final PhysicsCollisionEvent event) {
+        final PlayerController player;
+        final ItemController item;
+        if(!this.taken && (player = event.getNodeB().getControl(PlayerController.class)) != null) { 
+            if((item = event.getNodeA().getControl(ItemController.class)) != null) {
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        takeItem(player, item.getItemReference().getItemType());
+                    }
+                });
+                        
+                this.taken = true;
+
+                if(event.getNodeA() != null && this.taken == true) {
+                    event.getNodeA().removeFromParent();
+                    getPhysicsSpace().remove(item);
+                 }
             }
         }
     }
     
-    private void takeItem(PlayerController player, Control item, Spatial itemSpatial, ItemType type) {
+    private void takeItem(PlayerController player, ItemType type) {
         switch(type) {
             case HEALTHPOTION:
                 player.setHealthPotionCount(1);
@@ -82,13 +99,6 @@ public class ItemController extends RigidBodyControl implements PhysicsCollision
             case TINDER:
                 player.setTinderCount(1);
                 break;
-        }
-        
-        this.taken = true;
-        
-        if(itemSpatial != null && this.taken == true) {
-            itemSpatial.removeFromParent();
-            getPhysicsSpace().remove(item);
         }
     }
     

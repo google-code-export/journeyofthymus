@@ -2,7 +2,7 @@ package ai;
 
 /**
  *
- * @author
+ * @author MIKUiqnw0
  */
 public class WispController {
     

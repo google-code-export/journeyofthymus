@@ -8,8 +8,8 @@ import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 
 /**
- *
- * @author MIKUiqnw0
+ * Simple factory class to load models and generate objects in the game world
+ * @author James
  * @param
  * @since 8/03/2013
  * @version 0.00.01

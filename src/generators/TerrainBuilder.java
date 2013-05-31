@@ -70,7 +70,7 @@ public class TerrainBuilder {
                     case 'B':
                         block = ObjectFactory.makeBlock(BLOCK_WIDTH, BLOCK_HEIGHT, String.valueOf(iX) + String.valueOf(iY));
                         block.setLocalTranslation((BLOCK_WIDTH * iX), 0, (BLOCK_WIDTH * iY));
-                        block.setShadowMode(ShadowMode.Off);
+                        block.setShadowMode(ShadowMode.CastAndReceive);
                         mapNode.attachChild(block);
                         g.setColor(Color.GRAY);
                         break;
@@ -89,7 +89,7 @@ public class TerrainBuilder {
                             decoration = ObjectFactory.makeDecoration();
                             setOffset(decoration.getName(), iX, iY);
                             decoration.setLocalTranslation(offset);
-                            decoration.setShadowMode(ShadowMode.Off);
+                            decoration.setShadowMode(ShadowMode.CastAndReceive);
                             mapNode.attachChild(decoration);
                         }
                         g.setColor(Color.BLACK);
@@ -107,7 +107,7 @@ public class TerrainBuilder {
                 floor.setLocalTranslation(dimX * BLOCK_WIDTH * i / SEGMENTS - (BLOCK_WIDTH / 2),
                         -((BLOCK_HEIGHT / 2) + 0.25f),
                         dimX * BLOCK_WIDTH * j / SEGMENTS - (BLOCK_WIDTH / 2));
-                floor.setShadowMode(ShadowMode.Off);
+                floor.setShadowMode(ShadowMode.Receive);
                 mapNode.attachChild(floor);
 
             }
@@ -119,7 +119,7 @@ public class TerrainBuilder {
                 ceiling.setLocalTranslation(dimX * BLOCK_WIDTH * i / SEGMENTS - (BLOCK_WIDTH / 2),
                         ((BLOCK_HEIGHT / 2) + 0.25f),
                         dimX * BLOCK_WIDTH * j / SEGMENTS - (BLOCK_WIDTH / 2));
-                ceiling.setShadowMode(ShadowMode.Off);
+                ceiling.setShadowMode(ShadowMode.Receive);
                 mapNode.attachChild(ceiling);
             }
         }
@@ -129,7 +129,6 @@ public class TerrainBuilder {
         mapNode.addControl(labyrinth);
 
         physicsSpace.add(labyrinth);
-
         lightNode.attachChild(mapNode);
     }
 
