@@ -1,22 +1,19 @@
 package items;
 
 import com.jme3.bullet.BulletAppState;
-import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.PhysicsCollisionEvent;
 import com.jme3.bullet.collision.PhysicsCollisionListener;
 import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
-import com.jme3.scene.Spatial;
-import com.jme3.scene.control.Control;
+import com.jme3.scene.Node;
 import driver.ApplicationInterface;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import player.PlayerController;
 
 /**
- * Establishes collision of all in game collectable items and deals 
- * with their removal upon collection.
- * 
+ * Establishes collision of all in game collectable items and deals with their
+ * removal upon collection.
+ *
  * @author MIKUiqnw0
  * @param shape
  * @param mass
@@ -25,18 +22,18 @@ import player.PlayerController;
  * @version 0.00.01
  */
 public class ItemController extends RigidBodyControl implements PhysicsCollisionListener {
-    
+
     private boolean taken;
     private Item itemReference;
     private ScheduledThreadPoolExecutor executor;
-    
+
     public ItemController(CollisionShape shape, float mass, ApplicationInterface app, ItemType type) {
         super(shape, mass);
         app.getStateManager().getState(BulletAppState.class).getPhysicsSpace().addCollisionListener(this);
         executor = app.getExecutor();
         taken = false;
-        
-        switch(type) {
+
+        switch (type) {
             case HEALTHPOTION:
             case SPEEDPOTION:
                 itemReference = new Potion(type);
@@ -58,29 +55,17 @@ public class ItemController extends RigidBodyControl implements PhysicsCollision
 
     @Override
     public void collision(final PhysicsCollisionEvent event) {
-        final PlayerController player;
-        final ItemController item;
-        if(!this.taken && (player = event.getNodeB().getControl(PlayerController.class)) != null) { 
-            if((item = event.getNodeA().getControl(ItemController.class)) != null) {
-                executor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        takeItem(player, item.getItemReference().getItemType());
-                    }
-                });
-                        
-                this.taken = true;
-
-                if(event.getNodeA() != null && this.taken == true) {
-                    event.getNodeA().removeFromParent();
-                    getPhysicsSpace().remove(item);
-                 }
+        PlayerController player;
+        ItemController item;
+        if (!this.taken && (player = event.getNodeA().getControl(PlayerController.class)) != null) {
+            if ((item = event.getNodeB().getControl(ItemController.class)) != null) {
+                takeItem(player, item.getItemReference().getItemType(), (Node) event.getNodeB(), item);
             }
         }
     }
-    
-    private void takeItem(PlayerController player, ItemType type) {
-        switch(type) {
+
+    private void takeItem(PlayerController player, ItemType type, Node itemNode, ItemController item) {
+        switch (type) {
             case HEALTHPOTION:
                 player.setHealthPotionCount(1);
                 break;
@@ -88,7 +73,7 @@ public class ItemController extends RigidBodyControl implements PhysicsCollision
                 player.setSpeedPotionCount(1);
                 break;
             case KEY:
-                
+
                 break;
             case BOOTS:
                 player.enableSprint();
@@ -100,8 +85,16 @@ public class ItemController extends RigidBodyControl implements PhysicsCollision
                 player.setTinderCount(1);
                 break;
         }
+        
+        this.taken = true;
+        
+        if (itemNode != null && this.taken == true) {
+            itemNode.removeControl(item);
+            itemNode.removeFromParent();
+            getPhysicsSpace().remove(item);
+        }
     }
-    
+
     public Item getItemReference() {
         return itemReference;
     }

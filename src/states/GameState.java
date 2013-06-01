@@ -8,7 +8,6 @@ import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
-import com.jme3.bullet.collision.shapes.CompoundCollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.joints.ConeJoint;
 import com.jme3.bullet.joints.PhysicsJoint;
@@ -29,7 +28,6 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.control.CameraControl;
-import com.jme3.scene.debug.Arrow;
 import com.jme3.scene.shape.Box;
 import driver.ApplicationInterface;
 import generators.TerrainBuilder;
@@ -146,14 +144,6 @@ public class GameState extends AbstractAppState {
         bansheeNode.setLocalScale(0.3f);
         bansheeControl.setPhysicsLocation(new Vector3f(36f, 0.3f, 36f));
         
-        Arrow faceDir = new Arrow(bansheeControl.getViewDirection());
-        Geometry g = new Geometry("Facedirection", faceDir);
-        Material mat = new Material(app.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
-        mat.getAdditionalRenderState().setWireframe(true);
-        mat.setColor("Color", ColorRGBA.Blue);
-        g.setMaterial(mat);
-        bansheeNode.attachChild(g);
-        
         SpotLight dl = new SpotLight();
         dl.setDirection(new Vector3f(0f, -0.01f, 0f).normalizeLocal());
         dl.setPosition(new Vector3f(36f, 5f, 36f));
@@ -227,22 +217,25 @@ public class GameState extends AbstractAppState {
         Spatial healthpot = app.getAssetManager().loadModel("Models/health_flask.obj");
         healthpot.setLocalScale(0.15f);
         Material mat = new Material(app.getAssetManager(), "Common/MatDefs/Light/Lighting.j3md");
-        mat.setTexture("DiffuseMap", app.getAssetManager().loadTexture("Materials/health.jpg"));
+        mat.setTexture("DiffuseMap", app.getAssetManager().loadTexture("Textures/health.jpg"));
         healthpot.setMaterial(mat);
 
-        CompoundCollisionShape compound = new CompoundCollisionShape();
-        compound.addChildShape(new BoxCollisionShape(new Vector3f(0.25f, 0.27f, 0.25f)), new Vector3f(0, 0.27f, 0));
-        ItemController itemControl = new ItemController(compound, 0.3f, app, ItemType.OIL);
+        //////// OIL ////////
+        //CompoundCollisionShape compound = new CompoundCollisionShape();
+        BoxCollisionShape box = new BoxCollisionShape(new Vector3f(0.25f, 0.27f, 0.25f));
+        //compound.addChildShape(new BoxCollisionShape(new Vector3f(0.25f, 0.27f, 0.25f)), new Vector3f(0, 0.27f, 0));
+        ItemController itemControl = new ItemController(box, 0.3f, app, ItemType.OIL);
         itemNode.addControl(itemControl);
         itemNode.attachChild(healthpot);
         healthpot.setShadowMode(ShadowMode.Cast);
         app.getStateManager().getState(BulletAppState.class).getPhysicsSpace().add(itemControl);
         itemControl.setPhysicsLocation(new Vector3f(8.015633f, 1.15746358f, 59.78405f));
+        //////// OIL ////////
     }
 
     private void initializeLighting() {
         AmbientLight ambient = new AmbientLight();
-        ambient.setColor(ColorRGBA.White.mult(0.01f));
+        ambient.setColor(ColorRGBA.White.mult(0.1f));
         lightNode.addLight(ambient);
     }
 
@@ -251,7 +244,7 @@ public class GameState extends AbstractAppState {
         app.getViewPort().addProcessor(fpp);
 
 //        SSAOFilter ssaoFilter = new SSAOFilter(5.1f, 1.2f, 0.2f, 0.1f);
-        //fpp.addFilter(ssaoFilter);
+//        fpp.addFilter(ssaoFilter);
 
         FXAAFilter fxaaFilter = new FXAAFilter();
         fxaaFilter.setReduceMul(0.0f);

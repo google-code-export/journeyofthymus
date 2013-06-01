@@ -55,12 +55,10 @@ abstract public class ObjectFactory {
 
     public static Spatial makeBlock(float width, float height, String id) {
         Geometry block = new Geometry("Block" + id, new Box(width / 2, height / 2, width / 2));
+        int rand = (int) (Math.random() * 4) + 1;
+        System.out.println(rand);
         Material blockMat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-        blockMat.setBoolean("UseMaterialColors", true);
-        ColorRGBA color = ColorRGBA.randomColor();
-        blockMat.setColor("Diffuse", color);
-        blockMat.setColor("Ambient", color);
-        //blockMat.setColor("Color", ColorRGBA.randomColor());
+        blockMat.setTexture("DiffuseMap", assetManager.loadTexture("Textures/wall_texture_0" + rand + ".jpg"));
         block.setMaterial(blockMat);
 
         return block;

@@ -46,7 +46,7 @@ public class TorchController extends AbstractControl {
     private Future future;
 
     public TorchController(PlayerController player, Node lightNode, ApplicationInterface app) {
-        oilTimer = 5;
+        oilTimer = OIL_TIMER_MAX;
         tinderTimer = TINDER_TIMER_MAX;
         this.player = player;
         this.lightNode = lightNode;
