@@ -11,14 +11,13 @@ import com.jme3.scene.Node;
 import player.PlayerController;
 
 /**
- * AI Controller for the Banshee monster<br/>
- * States:<br/>
- *      IDLE: Performs no movement commands or wanders within waypoint range<br/>
- *      NEXT_WAYPOINT: Paths to next waypoint<br/>
- *      TARGET_CHASE: Locks on to and chases target (player)<br/>
- *      TARGET_LOST: Loses lock on target and wanders slighty from last known location, scanning directions<br/>
- *      TARGET_ATTACK: Strikes target and deals damage<br/>
- *      RECYCLE: Performs death animation (after TARGET_ATTACK) and respawns the monster elsewhere into IDLE mode<br/>
+ * AI Controller for the Banshee monster<br/> States:<br/> IDLE: Performs no
+ * movement commands or wanders within waypoint range<br/> NEXT_WAYPOINT: Paths
+ * to next waypoint<br/> TARGET_CHASE: Locks on to and chases target
+ * (player)<br/> TARGET_LOST: Loses lock on target and wanders slighty from last
+ * known location, scanning directions<br/> TARGET_ATTACK: Strikes target and
+ * deals damage<br/> RECYCLE: Performs death animation (after TARGET_ATTACK) and
+ * respawns the monster elsewhere into IDLE mode<br/>
  *
  * @author MIKUiqnw0
  * @since 31/05/2013
@@ -33,7 +32,6 @@ public class BansheeController extends CharacterControl implements AnimEventList
     private AnimControl animControl;
     private AnimChannel animChannel;
     private AIState aiState;
-    
 
     private static enum AIState {
 
@@ -43,7 +41,7 @@ public class BansheeController extends CharacterControl implements AnimEventList
     public BansheeController(PlayerController player, Node attachedObject) {
         super(new CapsuleCollisionShape(0.4f, 1.5f, 1), 0.55f);
         damage = -25;
-        deathTimer = 30;
+        deathTimer = 7;
         moveSpeed = player.getMoveSpeed() - 0.03f;
         aiState = AIState.TARGET_CHASE;
         this.player = player;
@@ -67,12 +65,6 @@ public class BansheeController extends CharacterControl implements AnimEventList
                 case NEXT_WAYPOINT:
                     break;
                 case TARGET_CHASE:
-                    if(!isWalking) {
-                        isWalking = true;
-                        animChannel.setAnim("Walk", 0.55f);
-                        animChannel.setLoopMode(LoopMode.Cycle);
-                    }
-                    
                     if (directionTimer <= 0) {
                         directionTimer = 2;
                         playerPosition = player.getPhysicsLocation().subtract(getPhysicsLocation());
@@ -81,6 +73,11 @@ public class BansheeController extends CharacterControl implements AnimEventList
                     } else {
                         setViewDirection(playerPosition);
                         if (getPhysicsLocation().distance(player.getPhysicsLocation()) > 2.5f) {
+                            if (!isWalking) {
+                                isWalking = true;
+                                animChannel.setAnim("Walk", 0.55f);
+                                animChannel.setLoopMode(LoopMode.Cycle);
+                            }
                             setWalkDirection(walkDirection);
                         } else {
                             aiState = AIState.TARGET_ATTACK;
@@ -88,7 +85,7 @@ public class BansheeController extends CharacterControl implements AnimEventList
                     }
                     directionTimer -= tpf;
                     break;
-                   
+
                 case TARGET_LOST:
                     break;
                 case TARGET_ATTACK:
@@ -97,9 +94,9 @@ public class BansheeController extends CharacterControl implements AnimEventList
                     //animChannel.setAnim("attack");
                     animChannel.setLoopMode(LoopMode.DontLoop);
                     setWalkDirection(Vector3f.ZERO);
-                    
+
                     //animChannel.setAnim("scream");
-                    player.setHealth(damage);                    
+                    player.setHealth(damage);
                     aiState = AIState.RECYCLE;
                     break;
             }
@@ -108,13 +105,13 @@ public class BansheeController extends CharacterControl implements AnimEventList
             if (deathTimer <= 0) {
                 aiState = AIState.IDLE;
                 deathTimer = 30;
-                
+
             } else {
                 deathTimer -= tpf;
             }
         }
     }
-    
+
     @Override
     public void onAnimCycleDone(AnimControl control, AnimChannel channel, String animName) {
     }

@@ -39,6 +39,7 @@ public class TerrainBuilder {
     private Random rand;
     private ArrayList<MapFileReader.Direction> decPlace;
     private Tile[][] map;
+    Graphics g;
 
     public TerrainBuilder(ApplicationInterface app, Node mapNode) {
         this.assetManager = app.getAssetManager();
@@ -62,7 +63,7 @@ public class TerrainBuilder {
         ObjectFactory.setAssetManager(assetManager);
 
         BufferedImage bitmap = new BufferedImage(dimX, dimX, BufferedImage.TYPE_INT_ARGB);
-        Graphics g = bitmap.getGraphics();
+        g = bitmap.getGraphics();
 
         for (iY = 0; iY < dimX; iY++) {
             for (iX = 0; iX < dimX; iX++) {
@@ -87,7 +88,7 @@ public class TerrainBuilder {
                         rand = new Random();
                         if (rand.nextFloat() < DEC_CHANCE) {
                             decoration = ObjectFactory.makeDecoration();
-                            setOffset(decoration.getName(), iX, iY);
+                            placeDec(decoration.getName(), iX, iY);
                             decoration.setLocalTranslation(offset);
                             decoration.setShadowMode(ShadowMode.CastAndReceive);
                             mapNode.attachChild(decoration);
@@ -100,7 +101,7 @@ public class TerrainBuilder {
                 g.drawRect(iX, iY, 1, 1);
             }
         }
-        
+
         for (float i = 1; i < SEGMENTS; i += 2) {
             for (float j = 1; j < SEGMENTS; j += 2) {
                 floor = ObjectFactory.makeFloor(dimX * BLOCK_WIDTH / (SEGMENTS / 2));
@@ -112,7 +113,7 @@ public class TerrainBuilder {
 
             }
         }
-        
+
         for (float i = 1; i < SEGMENTS; i += 2) {
             for (float j = 1; j < SEGMENTS; j += 2) {
                 ceiling = ObjectFactory.makeCeiling(dimX * BLOCK_WIDTH / (SEGMENTS / 2));
@@ -123,7 +124,7 @@ public class TerrainBuilder {
                 mapNode.attachChild(ceiling);
             }
         }
-        
+
         CollisionShape labyrinthShape = CollisionShapeFactory.createMeshShape(mapNode);
         RigidBodyControl labyrinth = new RigidBodyControl(labyrinthShape, 0);
         mapNode.addControl(labyrinth);
@@ -132,7 +133,7 @@ public class TerrainBuilder {
         lightNode.attachChild(mapNode);
     }
 
-    private void setOffset(String decType, int x, int z) {
+    private void placeDec(String decType, int x, int z) {
         Vector3f decSize = new Vector3f();
         decPlace = new ArrayList<>();
         if (map[x - 1][z].code == 'B') {
@@ -154,8 +155,6 @@ public class TerrainBuilder {
                 decSize.y = ObjectFactory.CRATE_SIZE / 2 + 0.25f;
                 decSize.z = ObjectFactory.CRATE_SIZE;
                 break;
-            case "Jug":
-                break;
             default:
                 break;
         }
@@ -168,42 +167,44 @@ public class TerrainBuilder {
         Random r = new Random();
         int side;
 
-        if (decPlace.contains(MapFileReader.Direction.Left) && decPlace.contains(MapFileReader.Direction.Down)) {
-            xOffset = -(BLOCK_WIDTH / 2) + (size.x / 2);
-            zOffset = -(BLOCK_WIDTH / 2) + (size.z / 2);
-        } else if (decPlace.contains(MapFileReader.Direction.Left) && decPlace.contains(MapFileReader.Direction.Up)) {
-            xOffset = -(BLOCK_WIDTH / 2) + (size.x / 2);
-            zOffset = (BLOCK_WIDTH / 2) - (size.z / 2);
-        } else if (decPlace.contains(MapFileReader.Direction.Left) && decPlace.contains(MapFileReader.Direction.Right)) {
-            side = r.nextInt(2);
-            switch (side) {
-                case 0:
-                    xOffset = -(BLOCK_WIDTH / 2) + (size.x / 2);
-                    break;
-                case 1:
-                    xOffset = (BLOCK_WIDTH / 2) + (size.x / 2);
-                    break;
+        if (decPlace.contains(MapFileReader.Direction.Left)) {
+            xOffset = (-BLOCK_WIDTH / 2) + (size.x);
+            if (decPlace.contains(MapFileReader.Direction.Down)) {
+                zOffset = (BLOCK_WIDTH / 2) - (size.z);
+            } else if (decPlace.contains(MapFileReader.Direction.Up)) {
+                zOffset = (-BLOCK_WIDTH / 2) + (size.z);
+            } else if (decPlace.contains(MapFileReader.Direction.Right)) {
+                side = r.nextInt(2);
+                switch (side) {
+                    case 0:
+                        xOffset = (BLOCK_WIDTH / 2) - (size.x);
+                        break;
+                    case 1:
+                        break;
+                }
             }
-            zOffset = 0;
-        } else if (decPlace.contains(MapFileReader.Direction.Right) && decPlace.contains(MapFileReader.Direction.Down)) {
-            xOffset = (BLOCK_WIDTH / 2) + (size.x / 2);
-            zOffset = -(BLOCK_WIDTH / 2) + (size.z / 2);
-        } else if (decPlace.contains(MapFileReader.Direction.Right) && decPlace.contains(MapFileReader.Direction.Up)) {
-            xOffset = (BLOCK_WIDTH / 2) + (size.x / 2);
-            zOffset = (BLOCK_WIDTH / 2) + (size.z / 2);
-        } else if (decPlace.contains(MapFileReader.Direction.Down) && decPlace.contains(MapFileReader.Direction.Up)) {
-            side = r.nextInt(2);
-            switch (side) {
-                case 0:
-                    zOffset = -(BLOCK_WIDTH / 2) + (size.z / 2);
-                    break;
-                case 1:
-                    zOffset = (BLOCK_WIDTH / 2) + (size.z / 2);
-                    break;
+        } else if (decPlace.contains(MapFileReader.Direction.Right)) {
+            xOffset = (BLOCK_WIDTH / 2) - (size.x);
+            if (decPlace.contains(MapFileReader.Direction.Down)) {
+                zOffset = (BLOCK_WIDTH / 2) - (size.z);
+            } else if (decPlace.contains(MapFileReader.Direction.Up)) {
+                zOffset = (-BLOCK_WIDTH / 2) + (size.z);
             }
-            xOffset = 0;
+        } else {
+            if (decPlace.contains(MapFileReader.Direction.Down)) {
+                zOffset = (BLOCK_WIDTH / 2) - (size.z);
+                if (decPlace.contains(MapFileReader.Direction.Up)) {
+                    side = r.nextInt(2);
+                    switch (side) {
+                        case 0:
+                            zOffset = (-BLOCK_WIDTH / 2) + (size.z);
+                            break;
+                        case 1:
+                            break;
+                    }
+                }
+            }
         }
-
         offset = new Vector3f((BLOCK_WIDTH * x) + xOffset,
                 -(BLOCK_WIDTH / 2) + size.y,
                 (BLOCK_WIDTH * z) + zOffset);

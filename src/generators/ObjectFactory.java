@@ -67,10 +67,8 @@ abstract public class ObjectFactory {
     public static Spatial makeDecoration() {
         Geometry decoration = new Geometry("Crate", new Box(CRATE_SIZE, CRATE_SIZE, CRATE_SIZE));
         Material decorationMat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-        decorationMat.setBoolean("UseMaterialColors", true);
-        ColorRGBA color = ColorRGBA.randomColor();
-        decorationMat.setColor("Diffuse", color);
-        decorationMat.setColor("Ambient", color);
+        //Spatial decoration = assetManager.loadModel("Models/Crate.j3o");
+        decorationMat.setTexture("DiffuseMap", assetManager.loadTexture("Models/Crate Texture.jpg"));
         decoration.setMaterial(decorationMat);
         return decoration;
 
