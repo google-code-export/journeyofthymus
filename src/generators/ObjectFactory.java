@@ -1,10 +1,12 @@
 package generators;
 
+import com.jme3.asset.AssetKey;
 import com.jme3.asset.AssetManager;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.plugins.MTLLoader;
 import com.jme3.scene.shape.Box;
 
 /**
@@ -54,11 +56,10 @@ abstract public class ObjectFactory {
     }
 
     public static Spatial makeBlock(float width, float height, String id) {
-        Geometry block = new Geometry("Block" + id, new Box(width / 2, height / 2, width / 2));
         int rand = (int) (Math.random() * 4) + 1;
-        System.out.println(rand);
+        Spatial block = assetManager.loadModel("Models/wall_"+ rand + "/wall_"+ rand + ".obj");
         Material blockMat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-        blockMat.setTexture("DiffuseMap", assetManager.loadTexture("Textures/wall_texture_0" + rand + ".jpg"));
+        blockMat.setTexture("DiffuseMap", assetManager.loadTexture("Models/wall_" + rand + "/wall_" + rand + "_texture.jpg"));
         block.setMaterial(blockMat);
 
         return block;
@@ -68,7 +69,8 @@ abstract public class ObjectFactory {
         Geometry decoration = new Geometry("Crate", new Box(CRATE_SIZE, CRATE_SIZE, CRATE_SIZE));
         Material decorationMat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
         //Spatial decoration = assetManager.loadModel("Models/Crate.j3o");
-        decorationMat.setTexture("DiffuseMap", assetManager.loadTexture("Models/Crate Texture.jpg"));
+        decorationMat.setTexture("DiffuseMap", assetManager.loadTexture("Models/crate/Crate Texture.jpg"));
+        
         decoration.setMaterial(decorationMat);
         return decoration;
 

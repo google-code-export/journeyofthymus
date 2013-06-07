@@ -36,7 +36,7 @@ public class PlayerController extends CharacterControl implements ActionListener
     private Node camNode;
 
     public PlayerController(ApplicationInterface app, Node camNode) {
-        super(new CapsuleCollisionShape(0.4f, 1.5f, 1), 0.55f);
+        super(new CapsuleCollisionShape(0.6f, 2f, 1), 0.55f);
         health = 100;
         moveSpeed = 0.1f;
         regenRate = 15;
@@ -263,10 +263,11 @@ public class PlayerController extends CharacterControl implements ActionListener
         inputManager.addMapping("Use_Oil", new KeyTrigger(KeyInput.KEY_3));
         inputManager.addMapping("Use_Tinder", new KeyTrigger(KeyInput.KEY_4));
         inputManager.addMapping("Sprint", new KeyTrigger(KeyInput.KEY_LSHIFT));
+        inputManager.addMapping("getcord", new KeyTrigger(KeyInput.KEY_F4));
 
         inputManager.addListener(this, new String[]{
                     "Left", "Right", "Forward", "Backward", "Use", "Use_HP", "Use_SP",
-                    "Use_Oil", "Use_Tinder", "Sprint"
+                    "Use_Oil", "Use_Tinder", "Sprint", "getcord"
         });
     }
 
@@ -307,6 +308,9 @@ public class PlayerController extends CharacterControl implements ActionListener
                         break;
                     case "Sprint":
                         useBoots();
+                        break;
+                    case "getcord":
+                        System.out.println(getPhysicsLocation().toString());
                         break;
                 }
             }

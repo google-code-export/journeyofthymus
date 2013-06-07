@@ -39,7 +39,7 @@ public class BansheeController extends CharacterControl implements AnimEventList
     };
 
     public BansheeController(PlayerController player, Node attachedObject) {
-        super(new CapsuleCollisionShape(0.4f, 1.5f, 1), 0.55f);
+        super(new CapsuleCollisionShape(0.6f, 2f, 1), 0.55f);
         damage = -25;
         deathTimer = 7;
         moveSpeed = player.getMoveSpeed() - 0.03f;
@@ -65,23 +65,19 @@ public class BansheeController extends CharacterControl implements AnimEventList
                 case NEXT_WAYPOINT:
                     break;
                 case TARGET_CHASE:
-                    if (directionTimer <= 0) {
-                        directionTimer = 2;
-                        playerPosition = player.getPhysicsLocation().subtract(getPhysicsLocation());
-                        walkDirection.addLocal(player.getPhysicsLocation().subtractLocal(getPhysicsLocation())).normalizeLocal();
-                        walkDirection.multLocal(moveSpeed);
-                    } else {
-                        setViewDirection(playerPosition);
-                        if (getPhysicsLocation().distance(player.getPhysicsLocation()) > 2.5f) {
-                            if (!isWalking) {
-                                isWalking = true;
-                                animChannel.setAnim("Walk", 0.55f);
-                                animChannel.setLoopMode(LoopMode.Cycle);
-                            }
-                            setWalkDirection(walkDirection);
-                        } else {
-                            aiState = AIState.TARGET_ATTACK;
+                    playerPosition = player.getPhysicsLocation().subtract(getPhysicsLocation());
+                    walkDirection.addLocal(player.getPhysicsLocation().subtractLocal(getPhysicsLocation())).normalizeLocal();
+                    walkDirection.multLocal(moveSpeed);
+                    setViewDirection(playerPosition);
+                    if (getPhysicsLocation().distance(player.getPhysicsLocation()) > 2.5f) {
+                        setWalkDirection(walkDirection);
+                        if (!isWalking) {
+                            isWalking = true;
+                            animChannel.setAnim("Walk", 0.55f);
+                            animChannel.setLoopMode(LoopMode.Loop);
                         }
+                    } else {
+                        aiState = AIState.TARGET_ATTACK;
                     }
                     directionTimer -= tpf;
                     break;

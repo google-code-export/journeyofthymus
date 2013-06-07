@@ -28,7 +28,7 @@ public class ThymusApplication extends SimpleApplication implements ApplicationI
     public static void main(String[] args) {
         ThymusApplication app = new ThymusApplication();
         AppSettings newSettings = new AppSettings(true);
-        
+
         System.setProperty("org.lwjgl.opengl.Window.undecorated", "true");
         GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
 //        DisplayMode[] modes = device.getDisplayModes();
@@ -38,12 +38,12 @@ public class ThymusApplication extends SimpleApplication implements ApplicationI
         newSettings.setDepthBits(24);
 //        newSettings.setFullscreen(device.isFullScreenSupported());
         newSettings.setVSync(true);
-        newSettings.setTitle("Journey of Thymus alpha"); 
+        newSettings.setTitle("Journey of Thymus alpha");
         app.setSettings(newSettings);
         app.setShowSettings(false);
-        
+
         app.start();
-        
+
         Display.setLocation(0, 0);
     }
 
@@ -59,12 +59,12 @@ public class ThymusApplication extends SimpleApplication implements ApplicationI
         Logger.getLogger("de.lessvoid.nifty").setLevel(Level.SEVERE);
         Logger.getLogger("NiftyInputEventHandlingLog").setLevel(Level.SEVERE);
     }
-    
+
     @Override
     public void simpleInitApp() {
         initializeGUI();
     }
-    
+
     @Override
     public void simpleUpdate(float tpf) {
     }
@@ -79,19 +79,18 @@ public class ThymusApplication extends SimpleApplication implements ApplicationI
         super.destroy();
         executor.shutdown();
     }
-    
-    
+
     @Override
     public Camera getCamera() {
         return cam;
     }
-    
+
     @Override
     public void startGame(String nextScreen) {
         nifty.gotoScreen(nextScreen);
         inputManager.setCursorVisible(false);
         setPauseOnLostFocus(false);
-        executor = new ScheduledThreadPoolExecutor(4);        
+        executor = new ScheduledThreadPoolExecutor(4);
         bulletAppState = new BulletAppState();
         gameState = new GameState(this);
 
@@ -99,8 +98,7 @@ public class ThymusApplication extends SimpleApplication implements ApplicationI
         stateManager.attach(gameState);
         stateManager.detach(menuState);
         flyCam.setEnabled(false);
-        //bulletAppState.getPhysicsSpace().enableDebug(assetManager);
-        guiNode.detachAllChildren();
+        bulletAppState.getPhysicsSpace().enableDebug(assetManager);
     }
 
     @Override

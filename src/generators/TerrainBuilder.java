@@ -70,7 +70,8 @@ public class TerrainBuilder {
                 switch (map[iX][iY].code) {
                     case 'B':
                         block = ObjectFactory.makeBlock(BLOCK_WIDTH, BLOCK_HEIGHT, String.valueOf(iX) + String.valueOf(iY));
-                        block.setLocalTranslation((BLOCK_WIDTH * iX), 0, (BLOCK_WIDTH * iY));
+                        block.setLocalTranslation((BLOCK_WIDTH * iX), -2, (BLOCK_WIDTH * iY));
+                        block.scale(2, 1, 2);
                         block.setShadowMode(ShadowMode.CastAndReceive);
                         mapNode.attachChild(block);
                         g.setColor(Color.GRAY);

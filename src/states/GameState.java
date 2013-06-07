@@ -1,6 +1,7 @@
 package states;
 
 import ai.BansheeController;
+import ai.Pathfinder;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
@@ -22,6 +23,7 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.FXAAFilter;
+import com.jme3.post.ssao.SSAOFilter;
 import com.jme3.renderer.queue.RenderQueue.ShadowMode;
 import com.jme3.scene.CameraNode;
 import com.jme3.scene.Geometry;
@@ -47,7 +49,7 @@ public class GameState extends AbstractAppState {
     private ApplicationInterface app;
     private TerrainBuilder terrainBuilder;
     private CameraNode camNode;
-    private Node playerNode, lightNode, mapNode, itemNode;
+    private Node playerNode, lightNode, mapNode, itemNode, waypointNode;
     BitmapText text;
 
     public GameState(ApplicationInterface app) {
@@ -90,10 +92,12 @@ public class GameState extends AbstractAppState {
         lightNode = new Node("Light Node");
         mapNode = new Node("Map Node");
         itemNode = new Node("Item Node");
+        waypointNode = new Node("Waypoint Node");
 
         lightNode.attachChild(playerNode);  
         lightNode.attachChild(camNode);
         lightNode.attachChild(itemNode);
+        lightNode.attachChild(waypointNode);
         app.getRootNode().attachChild(lightNode);
     }
 
@@ -112,6 +116,8 @@ public class GameState extends AbstractAppState {
         chaseCam.setRotationSensitivity(2f);
         chaseCam.setMinVerticalRotation(25 * FastMath.DEG_TO_RAD);
         chaseCam.setMaxVerticalRotation(FastMath.DEG_TO_RAD * 75);
+        app.getInputManager().deleteMapping("ChaseCamZoomIn");
+        app.getInputManager().deleteMapping("ChaseCamZoomOut");
         camNode.addControl(chaseCam);
     }
 
@@ -136,21 +142,18 @@ public class GameState extends AbstractAppState {
     }
 
     private void initializeAI() {
+        Pathfinder waypointGen = new Pathfinder(app);
+        waypointGen.buildGraph();
         Node bansheeNode = (Node) app.getAssetManager().loadModel("Models/Oto/Oto.mesh.xml");
         lightNode.attachChild(bansheeNode);
         BansheeController bansheeControl = new BansheeController(playerNode.getControl(PlayerController.class), bansheeNode);
         bansheeNode.addControl(bansheeControl);
         app.getStateManager().getState(BulletAppState.class).getPhysicsSpace().add(bansheeControl);               
         bansheeNode.setLocalScale(0.3f);
-        bansheeControl.setPhysicsLocation(new Vector3f(36f, 0.3f, 36f));
-        
-        SpotLight dl = new SpotLight();
-        dl.setDirection(new Vector3f(0f, -0.01f, 0f).normalizeLocal());
-        dl.setPosition(new Vector3f(36f, 5f, 36f));
-        dl.setSpotOuterAngle(4f);
-        app.getRootNode().addLight(dl);
+        bansheeNode.move(0,1,0);
+        bansheeControl.setPhysicsLocation(new Vector3f(12.112f, 0.3f, 7.989f));
     }
-    
+/*    
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
     private void testRagdolls() {
                 Node shoulders = createLimb(0.1f, 0.2f, new Vector3f(0.00f, 1.5f, 0), true);
@@ -211,13 +214,13 @@ public class GameState extends AbstractAppState {
         return joint;
     }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+*/
     private void initializeItems() {
-        itemNode.setLocalTranslation(new Vector3f(8.015633f, 1.15746358f, 59.78405f));
-        Spatial healthpot = app.getAssetManager().loadModel("Models/health_flask.obj");
+        Spatial healthpot = app.getAssetManager().loadModel("Models/health_flask/health_flask.obj");
         healthpot.setLocalScale(0.15f);
+        healthpot.setLocalTranslation(0, -.27f, 0);
         Material mat = new Material(app.getAssetManager(), "Common/MatDefs/Light/Lighting.j3md");
-        mat.setTexture("DiffuseMap", app.getAssetManager().loadTexture("Textures/health.jpg"));
+        mat.setTexture("DiffuseMap", app.getAssetManager().loadTexture("Models/health_flask/health.jpg"));
         healthpot.setMaterial(mat);
 
         //////// OIL ////////
@@ -235,7 +238,7 @@ public class GameState extends AbstractAppState {
 
     private void initializeLighting() {
         AmbientLight ambient = new AmbientLight();
-        ambient.setColor(ColorRGBA.White.mult(0.1f));
+        ambient.setColor(ColorRGBA.White.mult(1f));
         lightNode.addLight(ambient);
     }
 
@@ -243,8 +246,8 @@ public class GameState extends AbstractAppState {
         FilterPostProcessor fpp = new FilterPostProcessor(app.getAssetManager());
         app.getViewPort().addProcessor(fpp);
 
-//        SSAOFilter ssaoFilter = new SSAOFilter(5.1f, 1.2f, 0.2f, 0.1f);
-//        fpp.addFilter(ssaoFilter);
+        //SSAOFilter ssaoFilter = new SSAOFilter(5.1f, 1.2f, 0.2f, 0.1f);
+        //fpp.addFilter(ssaoFilter);
 
         FXAAFilter fxaaFilter = new FXAAFilter();
         fxaaFilter.setReduceMul(0.0f);
