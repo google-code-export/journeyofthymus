@@ -27,6 +27,7 @@ public class ThymusApplication extends SimpleApplication implements ApplicationI
     private BulletAppState bulletAppState;
     private ScheduledThreadPoolExecutor executor;
     private Nifty nifty;
+    private boolean debugShapesOn = false;
     
     private static Logger log = Logger.getLogger("ThymusApplication");
 
@@ -127,7 +128,9 @@ public class ThymusApplication extends SimpleApplication implements ApplicationI
         stateManager.attach(gameState);
         stateManager.detach(menuState);
         flyCam.setEnabled(false);
-        //bulletAppState.getPhysicsSpace().enableDebug(assetManager);
+        if(debugShapesOn) {
+            bulletAppState.getPhysicsSpace().enableDebug(assetManager);
+        }
     }
 
     @Override
@@ -146,5 +149,10 @@ public class ThymusApplication extends SimpleApplication implements ApplicationI
     @Override
     public void quitGame() {
         stop();
+    }
+
+    @Override
+    public void toggleDebugShapes(boolean toggle) {
+        debugShapesOn = toggle;
     }
 }

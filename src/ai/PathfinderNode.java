@@ -68,15 +68,15 @@ public class PathfinderNode extends Node {
             Node node = (Node) object;
             node.getChild("wp_visual").collideWith(ray, results);
             
-            System.out.println("----- Collisions? " + results.size() + "-----");
-            for (int i = 0; i < results.size(); i++) {
-              // For each hit, we know distance, impact point, name of geometry.
-              float dist = results.getCollision(i).getDistance();
-              Vector3f pt = results.getCollision(i).getContactPoint();
-              String hit = results.getCollision(i).getGeometry().getName();
-              System.out.println("* Collision #" + i);
-              System.out.println("  You shot " + hit + " at " + pt + ", " + dist + " wu away.");
-            }
+//            System.out.println("----- Collisions? " + results.size() + "-----");
+//            for (int i = 0; i < results.size(); i++) {
+//              // For each hit, we know distance, impact point, name of geometry.
+//              float dist = results.getCollision(i).getDistance();
+//              Vector3f pt = results.getCollision(i).getContactPoint();
+//              String hit = results.getCollision(i).getGeometry().getName();
+//              System.out.println("* Collision #" + i);
+//              System.out.println("  You shot " + hit + " at " + pt + ", " + dist + " wu away.");
+//            }
         }
     }
 }
