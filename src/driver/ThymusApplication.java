@@ -6,17 +6,20 @@ import com.jme3.niftygui.NiftyJmeDisplay;
 import com.jme3.renderer.Camera;
 import com.jme3.renderer.RenderManager;
 import com.jme3.system.AppSettings;
-import java.awt.DisplayMode;
+import de.lessvoid.nifty.Nifty;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
-import de.lessvoid.nifty.Nifty;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import org.lwjgl.opengl.Display;
 import states.GameState;
 import states.MenuState;
 
+/*
+ * Entry class to start the game.
+ *  
+ */
 public class ThymusApplication extends SimpleApplication implements ApplicationInterface, GameController {
 
     private MenuState menuState;
@@ -24,8 +27,15 @@ public class ThymusApplication extends SimpleApplication implements ApplicationI
     private BulletAppState bulletAppState;
     private ScheduledThreadPoolExecutor executor;
     private Nifty nifty;
+    
+    private static Logger log = Logger.getLogger("ThymusApplication");
 
+    /*
+     * Entry driver during run time
+     * @params args
+     */
     public static void main(String[] args) {
+        log.log(Level.ALL, "Starting application");
         ThymusApplication app = new ThymusApplication();
         AppSettings newSettings = new AppSettings(true);
 
@@ -47,7 +57,11 @@ public class ThymusApplication extends SimpleApplication implements ApplicationI
         Display.setLocation(0, 0);
     }
 
+    /*
+     * Initializes and displays the menu state and nifty elements
+     */
     public void initializeGUI() {
+        log.log(Level.ALL, "Initialising GUI");
         NiftyJmeDisplay niftyDisplay = new NiftyJmeDisplay(assetManager, inputManager, audioRenderer, guiViewPort);
         nifty = niftyDisplay.getNifty();
         menuState = new MenuState(this);
@@ -60,26 +74,41 @@ public class ThymusApplication extends SimpleApplication implements ApplicationI
         Logger.getLogger("NiftyInputEventHandlingLog").setLevel(Level.SEVERE);
     }
 
+    /*
+     * Inherited method from SimpleApplication, triggers after app.start()
+     */
     @Override
     public void simpleInitApp() {
         initializeGUI();
     }
 
+    /*
+     * Inherited method from SimpleApplication, main update loop, unused.
+     */
     @Override
     public void simpleUpdate(float tpf) {
     }
 
+    /*
+     * Inherited method from SimpleApplication, allows for custom render methods, unused.
+     */
     @Override
     public void simpleRender(RenderManager rm) {
         //TODO: add render code
     }
 
+    /*
+     * Overriden destroy method, used to properly manage the thread executor
+     */
     @Override
     public void destroy() {
         super.destroy();
         executor.shutdown();
     }
 
+    /*
+     * Returns camera
+     */
     @Override
     public Camera getCamera() {
         return cam;
@@ -98,7 +127,7 @@ public class ThymusApplication extends SimpleApplication implements ApplicationI
         stateManager.attach(gameState);
         stateManager.detach(menuState);
         flyCam.setEnabled(false);
-        bulletAppState.getPhysicsSpace().enableDebug(assetManager);
+        //bulletAppState.getPhysicsSpace().enableDebug(assetManager);
     }
 
     @Override

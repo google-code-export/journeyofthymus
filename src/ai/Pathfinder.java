@@ -1,6 +1,8 @@
 package ai;
 
 import com.jme3.asset.AssetManager;
+import com.jme3.bullet.collision.shapes.SphereCollisionShape;
+import com.jme3.bullet.control.GhostControl;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Geometry;
@@ -16,7 +18,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Generates waypoint nodes
+ * 
  *
  * @author MIKUiqnw0
  * @param 
@@ -28,6 +30,7 @@ public class Pathfinder {
     private int x, y, dimX;
     private static int nodeCount;
     private AssetManager assetManager;
+    private GhostControl ghostControl;
     private Node waypointNode;
     private List<PathfinderNode> wpNodes;
     private boolean isDebugActive;
@@ -49,10 +52,12 @@ public class Pathfinder {
                     case ' ':               
                     case 'S':                      
                         PathfinderNode waypoint = new PathfinderNode("wp_Node" + nodeCount, waypointNode);
-                        waypoint.setLocalTranslation((4 * x), 0, (4 * y));                        
+                        Spatial helper = createDebugVisuals();
+                        helper.setLocalTranslation((4 * x), 0, (4 * y));
+                        //setLocalTranslation((4 * x), 0, (4 * y));
                         waypointNode.attachChild(waypoint);
                         wpNodes.add(waypoint);
-                        waypoint.attachChild(createDebugVisuals());
+                        waypoint.attachChild(helper);
                         break;
                 }
             }
@@ -67,6 +72,8 @@ public class Pathfinder {
         Sphere wpSphere = new Sphere(32, 32, 0.2f);
         Material wpMat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
         Geometry wpGeom = new Geometry("wp_visual", wpSphere);
+        ghostControl = new GhostControl(new SphereCollisionShape(0.2f));
+        wpGeom.addControl(ghostControl);
         wpMat.setBoolean("UseMaterialColors", true);
         ColorRGBA color = ColorRGBA.Red;
         wpMat.setColor("Diffuse", color);

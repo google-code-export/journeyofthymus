@@ -12,6 +12,7 @@ import com.jme3.scene.shape.Line;
 import java.util.List;
 
 /**
+ * 
  *
  * @author MIKUiqnw0
  * @param 
@@ -56,8 +57,8 @@ public class PathfinderNode extends Node {
         CollisionResults results = new CollisionResults();
         Spatial child = getChild("wp_visual");
 
-        Ray ray = new Ray(child.getLocalTranslation(), child.getLocalRotation().getRotationColumn(2));
-        Geometry line = new Geometry("line", new Line(ray.getOrigin(), ray.getDirection().mult(3)));
+        Ray ray = new Ray(child.getLocalTranslation(), Vector3f.UNIT_Z);
+        Geometry line = new Geometry("line", new Line(ray.getOrigin(), ray.getDirection()));
         Material m = new Material(man, "Common/MatDefs/Misc/Unshaded.j3md");
         line.setMaterial(m);
         attachChild(line);
@@ -66,6 +67,7 @@ public class PathfinderNode extends Node {
         for(Spatial object : objList) {
             Node node = (Node) object;
             node.getChild("wp_visual").collideWith(ray, results);
+            
             System.out.println("----- Collisions? " + results.size() + "-----");
             for (int i = 0; i < results.size(); i++) {
               // For each hit, we know distance, impact point, name of geometry.

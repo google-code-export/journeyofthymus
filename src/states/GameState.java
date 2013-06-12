@@ -6,24 +6,17 @@ import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.bullet.BulletAppState;
-import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
-import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
-import com.jme3.bullet.control.RigidBodyControl;
-import com.jme3.bullet.joints.ConeJoint;
-import com.jme3.bullet.joints.PhysicsJoint;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.input.ChaseCamera;
 import com.jme3.light.AmbientLight;
-import com.jme3.light.SpotLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.FXAAFilter;
-import com.jme3.post.ssao.SSAOFilter;
 import com.jme3.renderer.queue.RenderQueue.ShadowMode;
 import com.jme3.scene.CameraNode;
 import com.jme3.scene.Geometry;
@@ -203,7 +196,7 @@ public class GameState extends AbstractAppState {
         node.addControl(rigidBodyControl);
         return node;
     }
-    
+   
     private PhysicsJoint join(Node A, Node B, Vector3f connectionPoint) {
         Vector3f pivotA = A.worldToLocal(connectionPoint, new Vector3f());
         Vector3f pivotB = B.worldToLocal(connectionPoint, new Vector3f());
