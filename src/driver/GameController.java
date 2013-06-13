@@ -11,6 +11,7 @@ package driver;
 public interface GameController {
 
     void startGame(String nextScreen);
+    void toggleDebugShapes(boolean toggle);
     void pause();
     void endGame();
     void quitGame();

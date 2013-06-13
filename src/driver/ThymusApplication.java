@@ -17,6 +17,10 @@ import org.lwjgl.opengl.Display;
 import states.GameState;
 import states.MenuState;
 
+/*
+ * Entry class to start the game.
+ *  
+ */
 public class ThymusApplication extends SimpleApplication implements ApplicationInterface, GameController {
 
     private MenuState menuState;
@@ -24,7 +28,7 @@ public class ThymusApplication extends SimpleApplication implements ApplicationI
     private BulletAppState bulletAppState;
     private ScheduledThreadPoolExecutor executor;
     private Nifty nifty;
-    
+    private boolean debugShapesOn = false;
     private static Logger logger = Logger.getLogger("ThymusApplication");
 
     /**
@@ -126,6 +130,9 @@ public class ThymusApplication extends SimpleApplication implements ApplicationI
         stateManager.detach(menuState);
         flyCam.setEnabled(false);
         //bulletAppState.getPhysicsSpace().enableDebug(assetManager);
+        if(debugShapesOn) {
+            bulletAppState.getPhysicsSpace().enableDebug(assetManager);
+        }
     }
 
     /**
@@ -148,5 +155,10 @@ public class ThymusApplication extends SimpleApplication implements ApplicationI
     @Override
     public void quitGame() {
         stop();
+    }
+
+    @Override
+    public void toggleDebugShapes(boolean toggle) {
+        debugShapesOn = toggle;
     }
 }
