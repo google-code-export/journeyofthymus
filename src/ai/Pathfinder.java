@@ -6,8 +6,7 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.shape.Sphere;
-import com.jme3.util.TangentBinormalGenerator;
+import com.jme3.scene.shape.Box;
 import driver.ApplicationInterface;
 import generators.Map;
 import generators.MapFileReader;
@@ -16,67 +15,107 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Generates waypoint nodes
+ *
  *
  * @author MIKUiqnw0
- * @param 
+ * @param app
+ * @param debug
  * @since 4/06/2013
  * @version 0.00.01
  */
 public class Pathfinder {
-    private Tile[][] map;
-    private int x, y, dimX;
-    private static int nodeCount;
-    private AssetManager assetManager;
-    private Node waypointNode;
-    private List<PathfinderNode> wpNodes;
-    private boolean isDebugActive;
 
-    public Pathfinder(ApplicationInterface app) {
-        map = new Map(MapFileReader.loadMap("assets/MapFiles/Labyrinth1.txt")).map;
+    private Tile[][] map;
+    private AssetManager assetManager;
+    private Node waypointGraph;
+    private int dimX, baseMovementCost = 10;
+
+    private static boolean isDebugActive;
+    private boolean foundTarget;
+ 
+    private List<PathfinderNode> pfNodeList;
+    private List<PathfinderNode> openList = new LinkedList<>();
+    private List<PathfinderNode> closedList = new LinkedList<>();
+    private PathfinderNode checkingNode = null;
+    private PathfinderNode firstNodeInGrid = null;
+    private PathfinderNode startNode = null;
+    private PathfinderNode targetNode = null;
+
+    /**
+     * @params app
+     */
+    public Pathfinder(ApplicationInterface app, boolean debug) {
         dimX = MapFileReader.getDimensions();
         assetManager = app.getAssetManager();
-        waypointNode = (Node)((Node) app.getRootNode().getChild("Light Node")).getChild("Waypoint Node");
+        waypointGraph = (Node) ((Node) app.getRootNode().getChild("Light Node")).getChild("Waypoint Graph");
+        map = new Map(MapFileReader.loadMap("assets/MapFiles/Labyrinth1.txt")).map;     
+        
+        if(debug) {
+            isDebugActive = true;
+        }
+        
+        buildGraph();
+    }
+
+    public List<PathfinderNode> getNodeList() throws NullPointerException {
+        if(pfNodeList == null) {
+            throw new NullPointerException("The waypoint graph was not created prior this method.");
+        } else {
+            return pfNodeList;
+        }
     }
     
-    public void buildGraph() {        
-        wpNodes = new LinkedList<>();
-        
-        for (y = 0; y < dimX; y++) {
-            for (x = 0; x < dimX; x++) {
-                ++nodeCount;
+    /**
+     * Generates a waypoint graph when pathfinder is first constructed
+     */
+    private void buildGraph() {
+        pfNodeList = new LinkedList<>();
+
+        for (int y = 0; y < dimX; y++) {
+            for (int x = 0; x < dimX; x++) {
                 switch (map[x][y].code) {
-                    case ' ':               
-                    case 'S':                      
-                        PathfinderNode waypoint = new PathfinderNode("wp_Node" + nodeCount, waypointNode);
-                        waypoint.setLocalTranslation((4 * x), 0, (4 * y));                        
-                        waypointNode.attachChild(waypoint);
-                        wpNodes.add(waypoint);
-                        waypoint.attachChild(createDebugVisuals());
+                    case ' ':
+                    case 'S':
+                        PathfinderNode pfNode = new PathfinderNode("pf_Node", pfNodeList);
+                        pfNode.setLocalTranslation((4 * x), 0, (4 * y));
+                        Spatial helper = createDebugVisuals();
+                        waypointGraph.attachChild(pfNode);
+                        pfNodeList.add(pfNode);
+                        pfNode.attachChild(helper);
                         break;
                 }
             }
         }
-        
-        for(PathfinderNode node : wpNodes) {
+
+        for (PathfinderNode node : pfNodeList) {
             node.locateAdjacentNodes(assetManager);
+        }
+        if (!isDebugActive) {
+            for (PathfinderNode node : pfNodeList) {
+                node.getChild("pf_visual").removeFromParent();
+            }
         }
     }
     
-    private Spatial createDebugVisuals() {
-        Sphere wpSphere = new Sphere(32, 32, 0.2f);
-        Material wpMat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-        Geometry wpGeom = new Geometry("wp_visual", wpSphere);
-        wpMat.setBoolean("UseMaterialColors", true);
-        ColorRGBA color = ColorRGBA.Red;
-        wpMat.setColor("Diffuse", color);
-        wpSphere.setTextureMode(Sphere.TextureMode.Projected);
-        TangentBinormalGenerator.generate(wpSphere);
-        wpGeom.setMaterial(wpMat);
-        return wpGeom;
+    private void calculateAllHeuristics() {
+        
     }
-    
+
+    private Spatial createDebugVisuals() {
+        Box phBox = new Box(.2f, .2f, .2f);
+        Material pfMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        Geometry pfGeom = new Geometry("pf_visual", phBox);
+        ColorRGBA color = ColorRGBA.Red;
+        pfMat.setColor("Color", color);
+        pfGeom.setMaterial(pfMat);
+        return pfGeom;
+    }
+
     public void enableDebugVisuals(boolean value) {
         isDebugActive = value;
+    }
+
+    public static boolean isDebugActive() {
+        return isDebugActive;
     }
 }

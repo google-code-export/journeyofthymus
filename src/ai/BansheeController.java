@@ -6,8 +6,12 @@ import com.jme3.animation.AnimEventListener;
 import com.jme3.animation.LoopMode;
 import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
 import com.jme3.bullet.control.CharacterControl;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
+import java.util.List;
+import java.util.Random;
 import player.PlayerController;
 
 /**
@@ -24,30 +28,35 @@ import player.PlayerController;
  */
 public class BansheeController extends CharacterControl implements AnimEventListener {
 
-    private int damage;
-    private float moveSpeed, directionTimer, deathTimer;
-    private boolean isWalking;
-    private Vector3f playerPosition;
+    private final int damage = -25;
+    private float moveSpeed, deathTimer = 30;
+    private AIState aiState;
     private PlayerController player;
+    private Pathfinder pathfinder;
     private AnimControl animControl;
     private AnimChannel animChannel;
-    private AIState aiState;
+    private List<PathfinderNode> pfNodeList;
+    private PathfinderNode currentWaypoint;   
+    private boolean isWalking;
+    private Node attachedObject;
 
-    private static enum AIState {
+    private enum AIState {
 
-        IDLE, NEXT_WAYPOINT, TARGET_CHASE, TARGET_LOST, TARGET_ATTACK, RECYCLE
+        IDLE, TRAVERSE_WAYPOINT, TARGET_CHASE, TARGET_LOST, TARGET_ATTACK, RECYCLE
     };
-
-    public BansheeController(PlayerController player, Node attachedObject) {
+    
+    public BansheeController(PlayerController player, Node attachedObject, Pathfinder pathfinder) {
         super(new CapsuleCollisionShape(0.6f, 2f, 1), 0.55f);
-        damage = -25;
-        deathTimer = 7;
         moveSpeed = player.getMoveSpeed() - 0.03f;
         aiState = AIState.TARGET_CHASE;
         this.player = player;
+        this.pathfinder = pathfinder;
         animControl = attachedObject.getControl(AnimControl.class);
         animControl.addListener(this);
         animChannel = animControl.createChannel();
+        this.attachedObject = attachedObject;
+        pfNodeList = pathfinder.getNodeList();
+        currentWaypoint = pfNodeList.get(new Random().nextInt(pfNodeList.size()));
     }
 
     @Override
@@ -57,57 +66,63 @@ public class BansheeController extends CharacterControl implements AnimEventList
     }
 
     private void stateMachine(float tpf) {
-        if (aiState != AIState.RECYCLE) {
-            switch (aiState) {
-                case IDLE:
-                    aiState = AIState.TARGET_CHASE;
-                    break;
-                case NEXT_WAYPOINT:
-                    break;
-                case TARGET_CHASE:
-                    playerPosition = player.getPhysicsLocation().subtract(getPhysicsLocation());
-                    walkDirection.addLocal(player.getPhysicsLocation().subtractLocal(getPhysicsLocation())).normalizeLocal();
-                    walkDirection.multLocal(moveSpeed);
-                    setViewDirection(playerPosition);
-                    if (getPhysicsLocation().distance(player.getPhysicsLocation()) > 2.5f) {
-                        setWalkDirection(walkDirection);
-                        if (!isWalking) {
-                            isWalking = true;
-                            animChannel.setAnim("Walk", 0.55f);
-                            animChannel.setLoopMode(LoopMode.Loop);
-                        }
-                    } else {
-                        aiState = AIState.TARGET_ATTACK;
+        switch (aiState) {
+            case IDLE:
+                aiState = AIState.TARGET_CHASE;
+                break;
+            case TRAVERSE_WAYPOINT:
+                // Select a random node from the graph list
+                PathfinderNode target = pfNodeList.get(new Random().nextInt(pfNodeList.size()));
+                break;
+            case TARGET_CHASE:
+                Vector3f playerPosition = player.getPhysicsLocation().subtract(getPhysicsLocation());
+                walkDirection.addLocal(player.getPhysicsLocation().subtractLocal(getPhysicsLocation())).normalizeLocal();
+                walkDirection.multLocal(moveSpeed);
+                setViewDirection(playerPosition);
+                if (getPhysicsLocation().distance(player.getPhysicsLocation()) > 2.5f) {
+                    setWalkDirection(walkDirection);
+                    if (!isWalking) {
+                        isWalking = true;
+                        animChannel.setAnim("Walk", 0.55f);
+                        animChannel.setLoopMode(LoopMode.Loop);
                     }
-                    directionTimer -= tpf;
-                    break;
+                } else {
+                    aiState = AIState.TARGET_ATTACK;
+                }
+                break;
 
-                case TARGET_LOST:
-                    break;
-                case TARGET_ATTACK:
-                    isWalking = false;
-                    animChannel.setAnim("stand");
-                    //animChannel.setAnim("attack");
-                    animChannel.setLoopMode(LoopMode.DontLoop);
-                    setWalkDirection(Vector3f.ZERO);
+            case TARGET_LOST:
+                break;
+            case TARGET_ATTACK:
+                isWalking = false;
+                animChannel.setAnim("stand");
+                //animChannel.setAnim("attack");
+                animChannel.setLoopMode(LoopMode.DontLoop);
+                setWalkDirection(Vector3f.ZERO);
 
-                    //animChannel.setAnim("scream");
-                    player.setHealth(damage);
-                    aiState = AIState.RECYCLE;
-                    break;
-            }
-        } else {
-            //Do death animation
-            if (deathTimer <= 0) {
-                aiState = AIState.IDLE;
-                deathTimer = 30;
-
-            } else {
-                deathTimer -= tpf;
-            }
+                //animChannel.setAnim("scream");
+                Geometry objGeom = (Geometry)attachedObject.getChild(0);
+                objGeom.getMaterial().setBoolean("UseMaterialColors", true);
+                objGeom.getMaterial().setColor("GlowColor", ColorRGBA.Red);
+                
+                player.setHealth(damage);
+                aiState = AIState.RECYCLE;
+                break;
+            case RECYCLE:
+                if (deathTimer <= 0) {
+                    aiState = AIState.IDLE;
+                    deathTimer = 30;
+                } else {
+                    deathTimer -= tpf;
+                }
+                break;
         }
     }
 
+    public PathfinderNode getCurrentWaypoint() {
+        return currentWaypoint;
+    }
+    
     @Override
     public void onAnimCycleDone(AnimControl control, AnimChannel channel, String animName) {
     }
