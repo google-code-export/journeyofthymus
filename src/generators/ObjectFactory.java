@@ -1,12 +1,13 @@
 package generators;
 
-import com.jme3.asset.AssetKey;
 import com.jme3.asset.AssetManager;
+import com.jme3.bullet.collision.shapes.BoxCollisionShape;
+import com.jme3.bullet.control.GhostControl;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.plugins.MTLLoader;
 import com.jme3.scene.shape.Box;
 
 /**
@@ -63,6 +64,11 @@ abstract public class ObjectFactory {
         block.setMaterial(blockMat);
 
         return block;
+    }
+    
+    public static GhostControl makeGhost(float width, float height) {
+        GhostControl soundGhost = new GhostControl(new BoxCollisionShape(new Vector3f(width / 2, height / 2, width / 2)));
+        return soundGhost;
     }
 
     public static Spatial makeDecoration() {

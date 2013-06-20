@@ -6,6 +6,9 @@ import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.bullet.BulletAppState;
+import com.jme3.bullet.PhysicsSpace;
+import com.jme3.bullet.collision.PhysicsCollisionEvent;
+import com.jme3.bullet.collision.PhysicsCollisionListener;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
@@ -18,7 +21,6 @@ import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.BloomFilter;
 import com.jme3.post.filters.FXAAFilter;
-import com.jme3.post.ssao.SSAOFilter;
 import com.jme3.renderer.queue.RenderQueue.ShadowMode;
 import com.jme3.scene.CameraNode;
 import com.jme3.scene.Geometry;
@@ -32,6 +34,7 @@ import items.ItemController;
 import items.ItemType;
 import items.TorchController;
 import player.PlayerController;
+import sound.SoundController;
 
 /**
  *
@@ -39,13 +42,16 @@ import player.PlayerController;
  * @since 21/03/2013
  * @version 0.00.01
  */
-public class GameState extends AbstractAppState {
+public class GameState extends AbstractAppState implements PhysicsCollisionListener {
 
     private ApplicationInterface app;
     private TerrainBuilder terrainBuilder;
+    private SoundController soundController;
     private CameraNode camNode;
     private Node playerNode, lightNode, mapNode, itemNode, waypointNode;
-    BitmapText text;
+    private PhysicsSpace physicsSpace;
+    private BitmapText text;
+    private int bansheeWailTimer = 0;
 
     public GameState(ApplicationInterface app) {
         this.app = app;
@@ -57,9 +63,11 @@ public class GameState extends AbstractAppState {
         initializeHUD();
         initializeNodes();
         initializeMap();
+        initializeSound();
         initializeCamera();
         initializePlayer();
         initializeAI();
+        initializeCollision();
         initializeItems();
         initializeLighting();
         initializePostProcessing();
@@ -67,6 +75,9 @@ public class GameState extends AbstractAppState {
 
     @Override
     public void update(float tpf) {
+        if(bansheeWailTimer > 0) {
+            bansheeWailTimer -= 1;
+        }
     }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -101,6 +112,11 @@ public class GameState extends AbstractAppState {
         terrainBuilder.buildMap();
     }
 
+    private void initializeSound() {
+        soundController = new SoundController(app.getAssetManager(), app.getRootNode());
+        soundController.initAudio();
+    }
+    
     private void initializeCamera() {
         ChaseCamera chaseCam = new ChaseCamera(app.getCamera(), playerNode, app.getInputManager());
         camNode.setControlDir(CameraControl.ControlDirection.CameraToSpatial);
@@ -141,11 +157,17 @@ public class GameState extends AbstractAppState {
         Node bansheeNode = (Node) app.getAssetManager().loadModel("Models/Oto/Oto.mesh.xml");
         lightNode.attachChild(bansheeNode);
         BansheeController bansheeControl = new BansheeController(playerNode.getControl(PlayerController.class), bansheeNode, pathfinder);
+        bansheeNode.setUserData("name", "Banshee");
         bansheeNode.addControl(bansheeControl);
         app.getStateManager().getState(BulletAppState.class).getPhysicsSpace().add(bansheeControl);
         bansheeNode.setLocalScale(0.3f);
         bansheeNode.move(0, 1, 0);
         bansheeControl.setPhysicsLocation(bansheeControl.getCurrentWaypoint().getLocalTranslation());
+    }
+    
+    private void initializeCollision() {
+        physicsSpace = app.getStateManager().getState(BulletAppState.class).getPhysicsSpace();
+        physicsSpace.addCollisionListener(this);
     }
     /*    
      //////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -251,5 +273,22 @@ public class GameState extends AbstractAppState {
         fxaaFilter.setReduceMul(0.0f);
         fxaaFilter.setSubPixelShift(0.0f);
         fpp.addFilter(fxaaFilter);
+    }
+
+    @Override
+    public void collision(PhysicsCollisionEvent event) {
+        if(event.getNodeA().getUserData("name") != null && event.getNodeB().getUserData("name") != null) {
+            if (event.getNodeA().getUserData("name").equals("Banshee") && event.getNodeB().getUserData("name").equals("TriggerVolume")) {
+                if(bansheeWailTimer == 0) {
+                    soundController.play3dSound(SoundController.soundEvent.BANSHEE_WAIL, event.getNodeA().getLocalTranslation());
+                    bansheeWailTimer = 3000;
+                }
+            } else if (event.getNodeB().getUserData("name").equals("Banshee") && event.getNodeA().getUserData("name").equals("TriggerVolume")) {
+                if(bansheeWailTimer == 0) {
+                    soundController.play3dSound(SoundController.soundEvent.BANSHEE_WAIL, event.getNodeB().getLocalTranslation());
+                    bansheeWailTimer = 3000;
+                }
+            }
+        }
     }
 }

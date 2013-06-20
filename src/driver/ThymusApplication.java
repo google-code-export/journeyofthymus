@@ -129,7 +129,6 @@ public class ThymusApplication extends SimpleApplication implements ApplicationI
         stateManager.attach(gameState);
         stateManager.detach(menuState);
         flyCam.setEnabled(false);
-        //bulletAppState.getPhysicsSpace().enableDebug(assetManager);
         if(debugShapesOn) {
             bulletAppState.getPhysicsSpace().enableDebug(assetManager);
         }
