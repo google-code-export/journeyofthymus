@@ -3,6 +3,8 @@ package generators;
 import com.jme3.asset.AssetManager;
 import com.jme3.asset.AssetNotFoundException;
 import com.jme3.effect.ParticleEmitter;
+import com.jme3.bullet.collision.shapes.BoxCollisionShape;
+import com.jme3.bullet.control.GhostControl;
 import com.jme3.effect.ParticleMesh;
 import com.jme3.effect.shapes.EmitterBoxShape;
 import com.jme3.material.Material;
@@ -179,6 +181,11 @@ abstract public class ObjectFactory {
         block.setMaterial(blockMat);
 
         return block;
+    }
+    
+    public static GhostControl makeGhost(float width, float height) {
+        GhostControl soundGhost = new GhostControl(new BoxCollisionShape(new Vector3f(width / 2, height / 2, width / 2)));
+        return soundGhost;
     }
 
     /**

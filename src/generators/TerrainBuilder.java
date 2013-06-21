@@ -4,6 +4,7 @@ import com.jme3.asset.AssetManager;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.shapes.CollisionShape;
+import com.jme3.bullet.control.GhostControl;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.effect.ParticleEmitter;
@@ -67,6 +68,8 @@ public class TerrainBuilder {
                 ceiling,
                 block,
                 decoration;
+        GhostControl soundGhost;
+        Node ghostNode = new Node("Ghost node");
 
         map = new Map(MapFileReader.loadMap("assets/MapFiles/Labyrinth1.txt")).map;
         dimX = MapFileReader.getDimensions();
@@ -89,8 +92,17 @@ public class TerrainBuilder {
                         break;
                     case 'S':
                         spawnPoint = new Node("SpawnPoint");
-                        spawnPoint.setLocalTranslation((BLOCK_WIDTH * iX), 1, (BLOCK_WIDTH * iY));
+                        spawnPoint.setLocalTranslation(BLOCK_WIDTH * iX, 1, BLOCK_WIDTH * iY);
                         mapNode.attachChild(spawnPoint);
+                        g.setColor(Color.BLACK);
+                        break;
+                    case 'G':
+                        soundGhost = ObjectFactory.makeGhost(BLOCK_WIDTH, BLOCK_HEIGHT);
+                        ghostNode.addControl(soundGhost);
+                        ghostNode.setUserData("name", "TriggerVolume");
+                        ghostNode.setLocalTranslation(BLOCK_WIDTH * iX, 0, BLOCK_WIDTH * iY);
+                        mapNode.attachChild(ghostNode);
+                        physicsSpace.add(soundGhost);
                         g.setColor(Color.BLACK);
                         break;
                     case 'V':
@@ -140,7 +152,6 @@ public class TerrainBuilder {
         CollisionShape labyrinthShape = CollisionShapeFactory.createMeshShape(mapNode);
         RigidBodyControl labyrinth = new RigidBodyControl(labyrinthShape, 0); // RigidBodyControl is used for solid objects and their collision properties
         mapNode.addControl(labyrinth);
-
         physicsSpace.add(labyrinth);
         lightNode.attachChild(mapNode);
         
