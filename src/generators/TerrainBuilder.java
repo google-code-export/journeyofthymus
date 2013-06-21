@@ -72,16 +72,16 @@ public class TerrainBuilder {
             for (iX = 0; iX < dimX; iX++) {
                 switch (map[iX][iY].code) {
                     case 'B':
-//                        block = ObjectFactory.makeBlock(BLOCK_WIDTH, BLOCK_HEIGHT, String.valueOf(iX) + String.valueOf(iY));
-//                        block.setLocalTranslation((BLOCK_WIDTH * iX), -2, (BLOCK_WIDTH * iY));
-//                        block.scale(2, 1, 2);
-//                        block.setShadowMode(ShadowMode.CastAndReceive);
-//                        mapNode.attachChild(block);
-//                        g.setColor(Color.GRAY);
+                        block = ObjectFactory.makeBlock(BLOCK_WIDTH, BLOCK_HEIGHT, String.valueOf(iX) + String.valueOf(iY));
+                        block.setLocalTranslation((BLOCK_WIDTH * iX), -2, (BLOCK_WIDTH * iY));
+                        block.scale(2, 1, 2);
+                        block.setShadowMode(ShadowMode.CastAndReceive);
+                        mapNode.attachChild(block);
+                        g.setColor(Color.GRAY);
                         break;
                     case 'S':
                         spawnPoint = new Node("SpawnPoint");
-                        spawnPoint.setLocalTranslation((BLOCK_WIDTH * iX), 1, (BLOCK_WIDTH * iY));
+                        spawnPoint.setLocalTranslation(BLOCK_WIDTH * iX, 1, BLOCK_WIDTH * iY);
                         mapNode.attachChild(spawnPoint);
                         g.setColor(Color.BLACK);
                         break;
@@ -89,6 +89,7 @@ public class TerrainBuilder {
                         soundGhost = ObjectFactory.makeGhost(BLOCK_WIDTH, BLOCK_HEIGHT);
                         ghostNode.addControl(soundGhost);
                         ghostNode.setUserData("name", "TriggerVolume");
+                        ghostNode.setLocalTranslation(BLOCK_WIDTH * iX, 0, BLOCK_WIDTH * iY);
                         mapNode.attachChild(ghostNode);
                         physicsSpace.add(soundGhost);
                         g.setColor(Color.BLACK);
