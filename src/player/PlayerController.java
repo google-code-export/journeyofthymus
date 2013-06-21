@@ -1,6 +1,5 @@
 package player;
 
-import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
 import com.jme3.bullet.control.CharacterControl;
 import com.jme3.input.InputManager;
@@ -9,114 +8,177 @@ import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
+import com.jme3.scene.Node;
 import driver.ApplicationInterface;
 import items.Boots;
 import items.ItemType;
-import items.Oil;
 import items.Potion;
-import items.Tinder;
-import items.Torch;
+import items.TorchController;
 
 /**
  * Object establishes attributes of the human controlled character, including
  * input controls.
  *
  * @author MIKUiqnw0
- * @param inputManager Requires the inputManager object to implement controls
  * @since 8/03/2013
  * @version 0.00.02
  */
 public class PlayerController extends CharacterControl implements ActionListener {
 
     private int health, invHealthPotion, invSpeedPot, invOil, invTinder, regenAmount;
-    private float regenRate, regenTimer, runSpeed;
+    private float regenRate, regenTimer, moveSpeed;
     private float sprintTimer, speedPotionTimer, bootsCooldownTimer;
     private boolean canSprint, sprinting, speedPotionStatus, bootsCooldown;
     private boolean left, right, forward, backward;
-    private Torch torch;
     private Camera cam;
     private InputManager inputManager;
+    private Node camNode;
 
-    public PlayerController(ApplicationInterface app) {
-        super(new CapsuleCollisionShape(0.4f, 1.5f, 1), 1f);
-        health = 5;
-        runSpeed = 0.15f;
+    /**
+     *
+     * @param app
+     * @param camNode
+     */
+    public PlayerController(ApplicationInterface app, Node camNode) {
+        super(new CapsuleCollisionShape(0.6f, 2f, 1), 0.55f);
+        health = 100;
+        moveSpeed = 0.1f;
         regenRate = 15;
         regenAmount = 1;
-
+        
+        this.camNode = camNode;
         cam = app.getCamera();
         inputManager = app.getInputManager();
         setupKeys();
-        torch = new Torch(new BoxCollisionShape(new Vector3f(0.3f, 1, 0.3f)));
     }
 
+    /**
+     *
+     * @return
+     */
     public int getHealth() {
         return health;
     }
 
+    /**
+     *
+     * @return
+     */
     public int getHealthPotCount() {
         return invHealthPotion;
     }
 
+    /**
+     *
+     * @return
+     */
     public int getSpeedPotCount() {
         return invSpeedPot;
     }
 
+    /**
+     *
+     * @return
+     */
     public int getOilCount() {
         return invOil;
     }
 
+    /**
+     *
+     * @return
+     */
     public int getTinderCount() {
         return invTinder;
     }
 
-    public float getRunSpeed() {
-        return runSpeed;
+    /**
+     *
+     * @return
+     */
+    public float getMoveSpeed() {
+        return moveSpeed;
     }
 
+    /**
+     *
+     * @return
+     */
     public float getRegenRate() {
         return regenRate;
     }
 
+    /**
+     *
+     * @return
+     */
     public int getRegenAmount() {
         return regenAmount;
     }
 
+    /**
+     *
+     * @param modifier
+     */
     public void setHealth(int modifier) {
         health += modifier;
         // Add validation
     }
 
-    public void setRunSpeed(float newRunSpeed) {
-        runSpeed = newRunSpeed;
+    /**
+     *
+     * @param newMoveSpeed
+     */
+    public void setMoveSpeed(float newMoveSpeed) {
+        moveSpeed = newMoveSpeed;
     }
 
+    /**
+     *
+     * @param newRegenRate
+     */
     public void setRegenRate(float newRegenRate) {
         regenRate = newRegenRate;
     }
 
+    /**
+     *
+     * @param newRegenAmount
+     */
     public void setRegenAmount(int newRegenAmount) {
         regenAmount = newRegenAmount;
     }
 
+    /**
+     *
+     * @param modifier
+     */
     public void setHealthPotionCount(int modifier) {
         invHealthPotion += modifier;
     }
 
+    /**
+     *
+     * @param modifier
+     */
     public void setSpeedPotionCount(int modifier) {
         invSpeedPot += modifier;
     }
 
+    /**
+     *
+     * @param modifier
+     */
     public void setOilCount(int modifier) {
         invOil += modifier;
     }
 
+    /**
+     *
+     * @param modifier
+     */
     public void setTinderCount(int modifier) {
         invTinder += modifier;
-    }
-
-    public void initializeArms() {
-        //model loading here
     }
 
     private void usePotion(ItemType type) {
@@ -132,7 +194,7 @@ public class PlayerController extends CharacterControl implements ActionListener
                     }
                     break;
                 case SPEEDPOTION:
-                    runSpeed += Potion.getModifier(type);
+                    moveSpeed += Potion.getModifier(type);
                     --invSpeedPot;
                     speedPotionStatus = true;
                     break;
@@ -142,27 +204,9 @@ public class PlayerController extends CharacterControl implements ActionListener
 
     private void useBoots() {
         if (canSprint && !bootsCooldown) {
-            runSpeed += Boots.getModifier();
+            moveSpeed += Boots.getModifier();
             sprinting = true;
             bootsCooldown = true;
-        }
-    }
-
-    private void useOil() {
-        if (isPositiveInventory(ItemType.OIL)) {
-            if (torch.getOilTimer() < Torch.getMaxOilTime()) {
-                torch.setOilTimer(Oil.getExtensionTime());
-                --invOil;
-            }
-        }
-    }
-
-    private void useTinder() {
-        if (isPositiveInventory(ItemType.TINDER)) {
-            if (torch.getTinderTimer() < Torch.getMaxTinderTime()) {
-                torch.setTinderTimer(Tinder.getExtensionTime());
-                --invTinder;
-            }
         }
     }
 
@@ -170,12 +214,19 @@ public class PlayerController extends CharacterControl implements ActionListener
         // world interaction method, like doors
     }
 
+    /**
+     *
+     */
     public void enableSprint() {
         canSprint = true;
     }
 
-    // Experiment with collection 
-    private boolean isPositiveInventory(ItemType type) {
+    /**
+     *
+     * @param type
+     * @return
+     */
+    public boolean isPositiveInventory(ItemType type) {
         if ((type == ItemType.HEALTHPOTION && invHealthPotion > 0)
                 || (type == ItemType.SPEEDPOTION && invSpeedPot > 0)
                 || (type == ItemType.OIL && invOil > 0)
@@ -198,7 +249,7 @@ public class PlayerController extends CharacterControl implements ActionListener
         if (sprintTimer < Boots.getSpeedTime()) {
             sprintTimer += tpf;
         } else {
-            runSpeed -= Boots.getModifier();
+            moveSpeed -= Boots.getModifier();
             sprinting = false;
             sprintTimer = 0;
         }
@@ -208,7 +259,7 @@ public class PlayerController extends CharacterControl implements ActionListener
         if (speedPotionTimer < Potion.getSpeedTime()) {
             speedPotionTimer += tpf;
         } else {
-            runSpeed -= Potion.getModifier(ItemType.SPEEDPOTION);
+            moveSpeed -= Potion.getModifier(ItemType.SPEEDPOTION);
             speedPotionStatus = false;
             speedPotionTimer = 0;
         }
@@ -241,9 +292,10 @@ public class PlayerController extends CharacterControl implements ActionListener
             walkDirection.addLocal(camDir.negate());
         }
 
-        walkDirection.normalizeLocal().multLocal(runSpeed);
+        walkDirection.normalizeLocal().multLocal(moveSpeed);
         walkDirection.y = 0;
         setWalkDirection(walkDirection);
+
     }
 
     private void updateCamera() {
@@ -251,7 +303,6 @@ public class PlayerController extends CharacterControl implements ActionListener
         eyeHeight.y = 0.6f;
 
         cam.setLocation(eyeHeight);
-        //eyeHeight.addLocal(camDir.negate().multLocal(0.3f));
     }
 
     @Override
@@ -271,13 +322,13 @@ public class PlayerController extends CharacterControl implements ActionListener
 
         updateMovement();
         updateCamera();
-        torch.update(tpf);
-        System.out.println(getPhysicsLocation() + " " + torch.getTinderTimer());
-        
     }
 
     /*
      * Initializes the default player keyboard setup for Journey of Thymus
+     */
+    /**
+     *
      */
     public final void setupKeys() {
         inputManager.addMapping("Left", new KeyTrigger(KeyInput.KEY_A));
@@ -290,10 +341,11 @@ public class PlayerController extends CharacterControl implements ActionListener
         inputManager.addMapping("Use_Oil", new KeyTrigger(KeyInput.KEY_3));
         inputManager.addMapping("Use_Tinder", new KeyTrigger(KeyInput.KEY_4));
         inputManager.addMapping("Sprint", new KeyTrigger(KeyInput.KEY_LSHIFT));
+        inputManager.addMapping("getcord", new KeyTrigger(KeyInput.KEY_F4));
 
         inputManager.addListener(this, new String[]{
                     "Left", "Right", "Forward", "Backward", "Use", "Use_HP", "Use_SP",
-                    "Use_Oil", "Use_Tinder", "Sprint"
+                    "Use_Oil", "Use_Tinder", "Sprint", "getcord"
         });
     }
 
@@ -327,13 +379,16 @@ public class PlayerController extends CharacterControl implements ActionListener
                         usePotion(ItemType.SPEEDPOTION);
                         break;
                     case "Use_Oil":
-                        useOil();
+                        camNode.getChild("Torch").getControl(TorchController.class).useOil();
                         break;
                     case "Use_Tinder":
-                        useTinder();
+                        camNode.getChild("Torch").getControl(TorchController.class).useTinder();
                         break;
                     case "Sprint":
                         useBoots();
+                        break;
+                    case "getcord":
+                        System.out.println(getPhysicsLocation().toString());
                         break;
                 }
             }

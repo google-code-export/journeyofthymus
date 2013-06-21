@@ -1,29 +1,42 @@
 package states;
 
+import ai.BansheeController;
+import ai.Pathfinder;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.bullet.BulletAppState;
+import com.jme3.bullet.PhysicsSpace;
+import com.jme3.bullet.collision.PhysicsCollisionEvent;
+import com.jme3.bullet.collision.PhysicsCollisionListener;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
-import com.jme3.bullet.collision.shapes.CollisionShape;
+import com.jme3.bullet.control.KinematicRagdollControl;
+import com.jme3.font.BitmapFont;
+import com.jme3.font.BitmapText;
 import com.jme3.input.ChaseCamera;
-import com.jme3.light.DirectionalLight;
-import com.jme3.light.PointLight;
+import com.jme3.light.AmbientLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
+import com.jme3.post.FilterPostProcessor;
+import com.jme3.post.filters.BloomFilter;
+import com.jme3.post.filters.FXAAFilter;
+import com.jme3.renderer.queue.RenderQueue.ShadowMode;
 import com.jme3.scene.CameraNode;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.control.CameraControl;
 import com.jme3.scene.shape.Box;
-import com.jme3.shadow.PssmShadowRenderer;
 import driver.ApplicationInterface;
+import generators.ObjectFactory;
 import generators.TerrainBuilder;
 import items.ItemController;
 import items.ItemType;
+import items.TorchController;
 import player.PlayerController;
+import sound.SoundController;
 
 /**
  *
@@ -31,61 +44,95 @@ import player.PlayerController;
  * @since 21/03/2013
  * @version 0.00.01
  */
-public class GameState extends AbstractAppState {
+public class GameState extends AbstractAppState implements PhysicsCollisionListener {
 
-    private PlayerController playerControl;
     private ApplicationInterface app;
     private TerrainBuilder terrainBuilder;
+    private SoundController soundController;
     private CameraNode camNode;
-    private Node playerNode, lightNode, mapNode;
-    private PointLight pointl;
+    private Node playerNode, lightNode, mapNode, itemNode, waypointNode;
+    private PhysicsSpace physicsSpace;
+    private BitmapText text;
+    private int bansheeWailTimer = 0;
 
+    /**
+     *
+     * @param app
+     */
     public GameState(ApplicationInterface app) {
         this.app = app;
-        
+      
     }
-    
+
+    /**
+     *
+     * @param stateManager
+     * @param app
+     */
     @Override
     public void initialize(AppStateManager stateManager, Application app) {
         super.initialize(stateManager, app);
+        initializeHUD();
         initializeNodes();
-        initializeMap();    
+        initializeMap();
+        initializeSound();
         initializeCamera();
         initializePlayer();
+        initializeAI();
+        initializeCollision();
         initializeItems();
         initializeLighting();
-        initializeShadows();
-        testLight();
+        initializePostProcessing();     
     }
-    
+
     @Override
     public void update(float tpf) {
-        super.update(tpf);
-        playerNode.setLocalTranslation(app.getCamera().getLocation());
-        pointl.setPosition(playerNode.getLocalTranslation());
+        if(bansheeWailTimer > 0) {
+            bansheeWailTimer -= tpf;
+        }
     }
-    
+
+    private void initializeHUD() {
+        BitmapFont guiFont = app.getAssetManager().loadFont("Interface/Fonts/Default.fnt");
+        BitmapText debug = new BitmapText(guiFont, false);
+        debug.setName("debugline");
+        debug.setSize(guiFont.getCharSet().getRenderedSize());
+        debug.setLocalTranslation(300, debug.getLineHeight(), 0);
+        app.getGuiNode().attachChild(debug);
+        text = (BitmapText) this.app.getGuiNode().getChild("debugline");
+    }
+
+    /*
+     * Creates several Node objects in a heriachy for controlled lighting and search functionality
+     */
     private void initializeNodes() {
         camNode = new CameraNode("Camera Node", app.getCamera());
         playerNode = new Node("Player");
         lightNode = new Node("Light Node");
         mapNode = new Node("Map Node");
+        itemNode = new Node("Item Node");
+        waypointNode = new Node("Waypoint Graph");
 
-        //app.getRootNode().setShadowMode(ShadowMode.Off);
-
-        app.getRootNode().attachChild(camNode);
-        app.getRootNode().attachChild(playerNode);
+        lightNode.attachChild(playerNode);
+        lightNode.attachChild(camNode);
+        lightNode.attachChild(itemNode);
+        lightNode.attachChild(waypointNode);
         app.getRootNode().attachChild(lightNode);
     }
-    
+
     private void initializeMap() {
         terrainBuilder = new TerrainBuilder(app, mapNode);
         terrainBuilder.buildMap();
     }
+
+    private void initializeSound() {
+        soundController = new SoundController(app.getAssetManager(), app.getRootNode());
+        soundController.initAudio();
+    }
     
-    private void initializeCamera() {      
-        ChaseCamera chaseCam = new ChaseCamera(app.getCamera(), playerNode, app.getInputManager());
-        camNode.setControlDir(CameraControl.ControlDirection.CameraToSpatial);      
+    private void initializeCamera() {
+        ChaseCamera chaseCam = new ChaseCamera(app.getCamera(), playerNode, app.getInputManager()); // Uses Chasecam to restrict y axis from toppling over the camera
+        camNode.setControlDir(CameraControl.ControlDirection.CameraToSpatial);
         chaseCam.setDefaultDistance(0.001f);
         chaseCam.setInvertVerticalAxis(true);
         chaseCam.setSmoothMotion(false);
@@ -93,55 +140,127 @@ public class GameState extends AbstractAppState {
         chaseCam.setRotationSensitivity(2f);
         chaseCam.setMinVerticalRotation(25 * FastMath.DEG_TO_RAD);
         chaseCam.setMaxVerticalRotation(FastMath.DEG_TO_RAD * 75);
+        app.getInputManager().deleteMapping("ChaseCamZoomIn");
+        app.getInputManager().deleteMapping("ChaseCamZoomOut");
         camNode.addControl(chaseCam);
     }
-    
-    private void initializePlayer() {        
-        playerControl = new PlayerController(app);
-        playerControl.setGravity(0.001f);
+
+    private void initializePlayer() {
+        PlayerController playerControl = new PlayerController(app, camNode); // Formally CharacterControl, used to establish player movement
         app.getStateManager().getState(BulletAppState.class).getPhysicsSpace().add(playerControl);
         playerNode.addControl(playerControl);
         playerControl.setPhysicsLocation(terrainBuilder.getSpawnPoint());
-        playerControl.enableSprint();
+
+        TorchController torchControl = new TorchController(playerControl, lightNode, app); // Lighting module for the torch
+        Geometry torch = new Geometry("Torch", new Box(.05f, .3f, .05f));
+        Material torchMat = new Material(app.getAssetManager(), "Common/MatDefs/Light/Lighting.j3md");
+        torchMat.setBoolean("UseMaterialColors", true);
+        torchMat.setColor("Diffuse", ColorRGBA.White);
+        torchMat.setColor("Ambient", ColorRGBA.White);
+        torchMat.setColor("Specular", ColorRGBA.White);
+        torch.setMaterial(torchMat);
+        torch.addControl(torchControl);
+        camNode.attachChild(torch);
+        torch.rotate(0.4f, 0.7f, 0f);
+        torch.setLocalTranslation(-.35f, -.2f, 1.29f);
+    }
+
+    private void initializeAI() {
+        Pathfinder pathfinder = new Pathfinder(app, false); // Waypoint calculation module used by all AI
+        Node bansheeNode = (Node) app.getAssetManager().loadModel("Models/Oto/Oto.mesh.xml");
+        KinematicRagdollControl ragdoll = new KinematicRagdollControl(2f);
+        lightNode.attachChild(bansheeNode);
+        BansheeController bansheeControl = new BansheeController(app, ragdoll, playerNode.getControl(PlayerController.class), bansheeNode, pathfinder); // Enemy behaviour module
+        bansheeNode.setUserData("name", "Banshee");
+        bansheeNode.addControl(bansheeControl);
+        app.getStateManager().getState(BulletAppState.class).getPhysicsSpace().add(bansheeControl);
+        bansheeNode.setLocalScale(0.3f);
+        bansheeNode.move(0, 1, 0);
+        bansheeControl.setPhysicsLocation(bansheeControl.getCurrentWaypoint().getLocalTranslation());
+               
+        ragdoll.addBoneName("hip.right");
+        ragdoll.addBoneName("hip.left");
+        ragdoll.addBoneName("spinehigh");
+        ragdoll.addBoneName("leg.right");
+        ragdoll.addBoneName("leg.left");
+        ragdoll.addBoneName("uparm.right");
+        ragdoll.addBoneName("uparm.left");
+        ragdoll.addBoneName("head");
+        ragdoll.addBoneName("foot.right");
+        ragdoll.addBoneName("foot.left");
+        ragdoll.addBoneName("arm.right");
+        ragdoll.addBoneName("arm.left");
+        ragdoll.addBoneName("hand.right");
+        ragdoll.addBoneName("hand.left");
+        
+        ragdoll.reBuild();
+
+        
     }
     
+    private void initializeCollision() {
+        physicsSpace = app.getStateManager().getState(BulletAppState.class).getPhysicsSpace();
+        physicsSpace.addCollisionListener(this);
+    }
+
     private void initializeItems() {
-        Geometry boxgeom = new Geometry("Item", new Box(0.2f, 0.2f, 0.2f));
+        Spatial healthpot = ObjectFactory.makePotion(ItemType.HEALTHPOTION);
+        Spatial speedpot = ObjectFactory.makePotion(ItemType.SPEEDPOTION);
+        //Spatial boots = app.getAssetManager().loadModel("Models/health_flask/health_flask.obj");
+        Spatial oil = app.getAssetManager().loadModel("Models/health_flask/health_flask.obj");
+        Spatial tinder = app.getAssetManager().loadModel("Models/health_flask/health_flask.obj");
+        
+        healthpot.setLocalScale(0.15f);
+        healthpot.setLocalTranslation(0, -.27f, 0);
         Material mat = new Material(app.getAssetManager(), "Common/MatDefs/Light/Lighting.j3md");
-        mat.setBoolean("UseMaterialColors",true);
-        ColorRGBA color = ColorRGBA.randomColor();
-        mat.setColor("Diffuse", color);
-        mat.setColor("Ambient", color);
-        boxgeom.setMaterial(mat);
-        
-        CollisionShape box = new BoxCollisionShape(new Vector3f(0.2f, 0.2f, 0.2f));
-        ItemController itemControl = new ItemController(box, 0.3f, app.getStateManager().getState(BulletAppState.class).getPhysicsSpace(), ItemType.TINDER);
-        boxgeom.addControl(itemControl);
-        lightNode.attachChild(boxgeom);
-        app.getStateManager().getState(BulletAppState.class).getPhysicsSpace().add(itemControl);
-        itemControl.setPhysicsLocation(new Vector3f(8.015633f, 1.15746358f, 59.78405f));
-        
+        mat.setTexture("DiffuseMap", app.getAssetManager().loadTexture("Models/health_flask/health.jpg"));
+        healthpot.setMaterial(mat);
+
+        BoxCollisionShape box = new BoxCollisionShape(new Vector3f(0.25f, 0.27f, 0.25f));
+
+        //////// HEALTH ////////
+        ItemController HealthItemControl = new ItemController(box, 0.3f, app, ItemType.HEALTHPOTION); // Item collision behaviour module
+        itemNode.addControl(HealthItemControl);
+        itemNode.attachChild(healthpot);
+        healthpot.setShadowMode(ShadowMode.Cast);
+        app.getStateManager().getState(BulletAppState.class).getPhysicsSpace().add(HealthItemControl);
+        HealthItemControl.setPhysicsLocation(new Vector3f(8.015633f, 1.15746358f, 59.78405f));
     }
-    
+
     private void initializeLighting() {
-        DirectionalLight sun = new DirectionalLight();
-        sun.setColor(ColorRGBA.White);
-        sun.setDirection(new Vector3f(-.3f, -.3f, -.2f).normalizeLocal());
-        app.getRootNode().addLight(sun);
+        AmbientLight ambient = new AmbientLight(); // Ambient light used for testing environments
+        ambient.setColor(ColorRGBA.White.mult(1f));
+        app.getRootNode().addLight(ambient);
     }
-    
-    private void initializeShadows() {
-        PssmShadowRenderer shadow = new PssmShadowRenderer(app.getAssetManager(), 2056, 5);
-        shadow.setDirection(new Vector3f(-.3f, -.3f, -.2f).normalizeLocal());
-        shadow.setFilterMode(PssmShadowRenderer.FilterMode.PCF8);
-        shadow.setShadowIntensity(0.4f);
-        app.getViewPort().addProcessor(shadow);
+
+    private void initializePostProcessing() {
+        FilterPostProcessor fpp = new FilterPostProcessor(app.getAssetManager()); // Manages graphical filtering options available to JME
+        app.getViewPort().addProcessor(fpp);
+
+        //SSAOFilter ssaoFilter = new SSAOFilter(5.1f, 1.2f, 0.2f, 0.1f);
+        //fpp.addFilter(ssaoFilter);
+
+        BloomFilter bloomFilter = new BloomFilter(BloomFilter.GlowMode.Objects); // Bloom, allows for glowing objects
+        fpp.addFilter(bloomFilter);
+        
+        FXAAFilter fxaaFilter = new FXAAFilter(); // Anti-aliasing filter
+        fxaaFilter.setReduceMul(0.0f);
+        fxaaFilter.setSubPixelShift(0.0f);
+        fpp.addFilter(fxaaFilter);
     }
-    
-    private void testLight() {
-        pointl = new PointLight();
-        pointl.setColor(ColorRGBA.White);
-        pointl.setRadius(7f);
-        lightNode.addLight(pointl);
+
+    @Override
+    public void collision(PhysicsCollisionEvent event) {
+        if(event.getNodeA() != null && event.getNodeB() != null) {
+            if(event.getNodeA().getUserData("name") != null && event.getNodeB().getUserData("name") != null) {
+                if ((event.getNodeA().getUserData("name").equals("Banshee") && event.getNodeB().getUserData("name").equals("TriggerVolume")) ||
+                        (event.getNodeA().getUserData("name").equals("TriggerVolume") && event.getNodeB().getUserData("name").equals("Banshee"))) {
+                    if(bansheeWailTimer == 0) {
+                        soundController.play3dSound(SoundController.soundEvent.BANSHEE_WAIL, event.getNodeA().getLocalTranslation());
+                        bansheeWailTimer = 3000;
+                    }
+                }
+            }
+        }
     }
 }

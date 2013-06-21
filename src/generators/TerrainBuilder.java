@@ -4,8 +4,10 @@ import com.jme3.asset.AssetManager;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.shapes.CollisionShape;
+import com.jme3.bullet.control.GhostControl;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
+import com.jme3.effect.ParticleEmitter;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue.ShadowMode;
 import com.jme3.scene.Node;
@@ -19,7 +21,8 @@ import java.util.Random;
 
 /**
  *
- * @author @param @since @version 0.00.01
+ * @author James
+ * @version 0.01.00
  */
 public class TerrainBuilder {
 
@@ -31,15 +34,21 @@ public class TerrainBuilder {
     private AssetManager assetManager;
     private Node lightNode, mapNode, spawnPoint;
     private PhysicsSpace physicsSpace;
-    private final int BLOCK_WIDTH = 4,
+    private final float BLOCK_WIDTH = 4,
             BLOCK_HEIGHT = 4,
-            FLOOR_SEGMENTS = 4;
+            SEGMENTS = 32;
     private float DEC_CHANCE = 0.2f;
     private Vector3f offset;
     private Random rand;
     private ArrayList<MapFileReader.Direction> decPlace;
     private Tile[][] map;
+    Graphics g;
 
+    /**
+     *
+     * @param app
+     * @param mapNode
+     */
     public TerrainBuilder(ApplicationInterface app, Node mapNode) {
         this.assetManager = app.getAssetManager();
         this.mapNode = mapNode;
@@ -47,6 +56,9 @@ public class TerrainBuilder {
         physicsSpace = app.getStateManager().getState(BulletAppState.class).getPhysicsSpace();
     }
 
+    /**
+     *
+     */
     public void buildMap() {
 
         int dimX,
@@ -56,28 +68,41 @@ public class TerrainBuilder {
                 ceiling,
                 block,
                 decoration;
+        GhostControl soundGhost;
+        Node ghostNode = new Node("Ghost node");
 
         map = new Map(MapFileReader.loadMap("assets/MapFiles/Labyrinth1.txt")).map;
         dimX = MapFileReader.getDimensions();
         ObjectFactory.setAssetManager(assetManager);
 
-        BufferedImage bitmap = new BufferedImage(dimX, dimX, BufferedImage.TYPE_INT_ARGB);
-        Graphics g = bitmap.getGraphics();
+        // BufferedImage, used to create a writable image for the minimap feature
+        BufferedImage bitmap = new BufferedImage(dimX, dimX, BufferedImage.TYPE_INT_ARGB); 
+        g = bitmap.getGraphics();
 
         for (iY = 0; iY < dimX; iY++) {
             for (iX = 0; iX < dimX; iX++) {
                 switch (map[iX][iY].code) {
                     case 'B':
                         block = ObjectFactory.makeBlock(BLOCK_WIDTH, BLOCK_HEIGHT, String.valueOf(iX) + String.valueOf(iY));
-                        block.setLocalTranslation((BLOCK_WIDTH * iX), 0, (BLOCK_WIDTH * iY));
+                        block.setLocalTranslation((BLOCK_WIDTH * iX), -2, (BLOCK_WIDTH * iY));
+                        block.scale(2, 1, 2);
                         block.setShadowMode(ShadowMode.CastAndReceive);
                         mapNode.attachChild(block);
                         g.setColor(Color.GRAY);
                         break;
                     case 'S':
                         spawnPoint = new Node("SpawnPoint");
-                        spawnPoint.setLocalTranslation((BLOCK_WIDTH * iX), 1, (BLOCK_WIDTH * iY));
+                        spawnPoint.setLocalTranslation(BLOCK_WIDTH * iX, 1, BLOCK_WIDTH * iY);
                         mapNode.attachChild(spawnPoint);
+                        g.setColor(Color.BLACK);
+                        break;
+                    case 'G':
+                        soundGhost = ObjectFactory.makeGhost(BLOCK_WIDTH, BLOCK_HEIGHT);
+                        ghostNode.addControl(soundGhost);
+                        ghostNode.setUserData("name", "TriggerVolume");
+                        ghostNode.setLocalTranslation(BLOCK_WIDTH * iX, 0, BLOCK_WIDTH * iY);
+                        mapNode.attachChild(ghostNode);
+                        physicsSpace.add(soundGhost);
                         g.setColor(Color.BLACK);
                         break;
                     case 'V':
@@ -87,8 +112,9 @@ public class TerrainBuilder {
                         rand = new Random();
                         if (rand.nextFloat() < DEC_CHANCE) {
                             decoration = ObjectFactory.makeDecoration();
-                            setOffset(decoration.getName(), iX, iY);
+                            placeDec(decoration.getName(), iX, iY);
                             decoration.setLocalTranslation(offset);
+                            decoration.setShadowMode(ShadowMode.CastAndReceive);
                             mapNode.attachChild(decoration);
                         }
                         g.setColor(Color.BLACK);
@@ -99,32 +125,41 @@ public class TerrainBuilder {
                 g.drawRect(iX, iY, 1, 1);
             }
         }
-        for (int i = 1; i < FLOOR_SEGMENTS; i += 2) {
-            for (int j = 1; j < FLOOR_SEGMENTS; j += 2) {
-                floor = ObjectFactory.makeFloor(dimX * BLOCK_WIDTH / 2);
-                floor.setLocalTranslation(dimX * BLOCK_WIDTH * i / FLOOR_SEGMENTS - (BLOCK_WIDTH / 2),
+
+        for (float i = 1; i < SEGMENTS; i += 2) {
+            for (float j = 1; j < SEGMENTS; j += 2) {
+                floor = ObjectFactory.makeFloor(dimX * BLOCK_WIDTH / (SEGMENTS / 2));
+                floor.setLocalTranslation(dimX * BLOCK_WIDTH * i / SEGMENTS - (BLOCK_WIDTH / 2),
                         -((BLOCK_HEIGHT / 2) + 0.25f),
-                        dimX * BLOCK_WIDTH * j / FLOOR_SEGMENTS - (BLOCK_WIDTH / 2));
-                mapNode.attachChild(floor);
+                        dimX * BLOCK_WIDTH * j / SEGMENTS - (BLOCK_WIDTH / 2));
                 floor.setShadowMode(ShadowMode.Receive);
+                mapNode.attachChild(floor);
+
             }
         }
-        ceiling = ObjectFactory.makeCeiling(dimX * BLOCK_WIDTH);
-        ceiling.setLocalTranslation(dimX * BLOCK_WIDTH / 2 - (BLOCK_WIDTH / 2),
-                ((BLOCK_HEIGHT / 2) + 0.25f),
-                dimX * BLOCK_WIDTH / 2 - (BLOCK_WIDTH / 2));
-        mapNode.attachChild(ceiling);
+
+        for (float i = 1; i < SEGMENTS; i += 2) {
+            for (float j = 1; j < SEGMENTS; j += 2) {
+                ceiling = ObjectFactory.makeCeiling(dimX * BLOCK_WIDTH / (SEGMENTS / 2));
+                ceiling.setLocalTranslation(dimX * BLOCK_WIDTH * i / SEGMENTS - (BLOCK_WIDTH / 2),
+                        ((BLOCK_HEIGHT / 2) + 0.25f),
+                        dimX * BLOCK_WIDTH * j / SEGMENTS - (BLOCK_WIDTH / 2));
+                ceiling.setShadowMode(ShadowMode.Receive);
+                mapNode.attachChild(ceiling);
+            }
+        }
 
         CollisionShape labyrinthShape = CollisionShapeFactory.createMeshShape(mapNode);
-        RigidBodyControl labyrinth = new RigidBodyControl(labyrinthShape, 0);
+        RigidBodyControl labyrinth = new RigidBodyControl(labyrinthShape, 0); // RigidBodyControl is used for solid objects and their collision properties
         mapNode.addControl(labyrinth);
-
         physicsSpace.add(labyrinth);
-
         lightNode.attachChild(mapNode);
+        
+        ParticleEmitter fog = ObjectFactory.makeFog();
+        lightNode.attachChild(fog);
     }
 
-    private void setOffset(String decType, int x, int z) {
+    private void placeDec(String decType, int x, int z) {
         Vector3f decSize = new Vector3f();
         decPlace = new ArrayList<>();
         if (map[x - 1][z].code == 'B') {
@@ -146,8 +181,6 @@ public class TerrainBuilder {
                 decSize.y = ObjectFactory.CRATE_SIZE / 2 + 0.25f;
                 decSize.z = ObjectFactory.CRATE_SIZE;
                 break;
-            case "Jug":
-                break;
             default:
                 break;
         }
@@ -160,47 +193,53 @@ public class TerrainBuilder {
         Random r = new Random();
         int side;
 
-        if (decPlace.contains(MapFileReader.Direction.Left) && decPlace.contains(MapFileReader.Direction.Down)) {
-            xOffset = -(BLOCK_WIDTH / 2) + (size.x / 2);
-            zOffset = -(BLOCK_WIDTH / 2) + (size.z / 2);
-        } else if (decPlace.contains(MapFileReader.Direction.Left) && decPlace.contains(MapFileReader.Direction.Up)) {
-            xOffset = -(BLOCK_WIDTH / 2) + (size.x / 2);
-            zOffset = (BLOCK_WIDTH / 2) - (size.z / 2);
-        } else if (decPlace.contains(MapFileReader.Direction.Left) && decPlace.contains(MapFileReader.Direction.Right)) {
-            side = r.nextInt(2);
-            switch (side) {
-                case 0:
-                    xOffset = -(BLOCK_WIDTH / 2) + (size.x / 2);
-                    break;
-                case 1:
-                    xOffset = (BLOCK_WIDTH / 2) + (size.x / 2);
-                    break;
+        if (decPlace.contains(MapFileReader.Direction.Left)) {
+            xOffset = (-BLOCK_WIDTH / 2) + (size.x);
+            if (decPlace.contains(MapFileReader.Direction.Down)) {
+                zOffset = (BLOCK_WIDTH / 2) - (size.z);
+            } else if (decPlace.contains(MapFileReader.Direction.Up)) {
+                zOffset = (-BLOCK_WIDTH / 2) + (size.z);
+            } else if (decPlace.contains(MapFileReader.Direction.Right)) {
+                side = r.nextInt(2);
+                switch (side) {
+                    case 0:
+                        xOffset = (BLOCK_WIDTH / 2) - (size.x);
+                        break;
+                    case 1:
+                        break;
+                }
             }
-            zOffset = 0;
-        } else if (decPlace.contains(MapFileReader.Direction.Right) && decPlace.contains(MapFileReader.Direction.Down)) {
-            xOffset = (BLOCK_WIDTH / 2) + (size.x / 2);
-            zOffset = -(BLOCK_WIDTH / 2) + (size.z / 2);
-        } else if (decPlace.contains(MapFileReader.Direction.Right) && decPlace.contains(MapFileReader.Direction.Up)) {
-            xOffset = (BLOCK_WIDTH / 2) + (size.x / 2);
-            zOffset = (BLOCK_WIDTH / 2) + (size.z / 2);
-        } else if (decPlace.contains(MapFileReader.Direction.Down) && decPlace.contains(MapFileReader.Direction.Up)) {
-            side = r.nextInt(2);
-            switch (side) {
-                case 0:
-                    zOffset = -(BLOCK_WIDTH / 2) + (size.z / 2);
-                    break;
-                case 1:
-                    zOffset = (BLOCK_WIDTH / 2) + (size.z / 2);
-                    break;
+        } else if (decPlace.contains(MapFileReader.Direction.Right)) {
+            xOffset = (BLOCK_WIDTH / 2) - (size.x);
+            if (decPlace.contains(MapFileReader.Direction.Down)) {
+                zOffset = (BLOCK_WIDTH / 2) - (size.z);
+            } else if (decPlace.contains(MapFileReader.Direction.Up)) {
+                zOffset = (-BLOCK_WIDTH / 2) + (size.z);
             }
-            xOffset = 0;
+        } else {
+            if (decPlace.contains(MapFileReader.Direction.Down)) {
+                zOffset = (BLOCK_WIDTH / 2) - (size.z);
+                if (decPlace.contains(MapFileReader.Direction.Up)) {
+                    side = r.nextInt(2);
+                    switch (side) {
+                        case 0:
+                            zOffset = (-BLOCK_WIDTH / 2) + (size.z);
+                            break;
+                        case 1:
+                            break;
+                    }
+                }
+            }
         }
-
         offset = new Vector3f((BLOCK_WIDTH * x) + xOffset,
                 -(BLOCK_WIDTH / 2) + size.y,
                 (BLOCK_WIDTH * z) + zOffset);
     }
 
+    /**
+     *
+     * @return A Vector3f to the players initial spawn location
+     */
     public Vector3f getSpawnPoint() {
         return spawnPoint.getLocalTranslation();
     }

@@ -2,6 +2,7 @@ package sound;
 
 import com.jme3.asset.AssetManager;
 import com.jme3.audio.AudioNode;
+import com.jme3.math.Vector3f;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
 import com.jme3.scene.Node;
@@ -11,16 +12,18 @@ import com.jme3.scene.control.Control;
 
 /**
  *
- * @author
+ * @author James
  */
 public class SoundController extends AbstractControl {
 
     private AssetManager assetManager;
     private Node rootNode;
     private AudioNode musicAmbient,
-                        musicTheme;
+                        musicTheme,
+                        bansheeWail;
     public enum soundEvent{MUSIC_AMBIENT,
-                            MUSIC_THEME};
+                            MUSIC_THEME,
+                            BANSHEE_WAIL};
     
     
     public SoundController(AssetManager assetManager, Node rootNode)
@@ -44,10 +47,8 @@ public class SoundController extends AbstractControl {
         throw new UnsupportedOperationException("Not supported yet.");
     }
     
-    public void playSound(soundEvent event)
-    {
-        switch(event)
-        {
+    public void playSound(soundEvent event) {
+        switch(event) {
             case MUSIC_AMBIENT:
                 musicAmbient.play();
                 break;
@@ -59,10 +60,17 @@ public class SoundController extends AbstractControl {
         }
     }
     
-    public void stopSound(soundEvent event)
-    {
-        switch(event)
-        {
+    public void play3dSound(soundEvent event, Vector3f position) {
+        switch(event) {
+            case BANSHEE_WAIL:
+                bansheeWail.setLocalTranslation(position);
+                bansheeWail.playInstance();
+                break;
+        }
+    }
+    
+    public void stopSound(soundEvent event) {
+        switch(event) {
             case MUSIC_AMBIENT:
                 musicAmbient.stop();
                 break;
@@ -74,8 +82,7 @@ public class SoundController extends AbstractControl {
         }
     }
     
-    public void initAudio()
-    {
+    public void initAudio() {
         //Looping ambient music
         musicAmbient = new AudioNode(assetManager, "Sounds/ThymusLabrynth.ogg", false);
         musicAmbient.setLooping(true);
@@ -87,5 +94,11 @@ public class SoundController extends AbstractControl {
         musicTheme.setLooping(true);
         musicTheme.setVolume(1);
         rootNode.attachChild(musicTheme);
+        
+        bansheeWail = new AudioNode(assetManager, "Sounds/Beep.ogg", false);
+        bansheeWail.setLooping(false);
+        bansheeWail.setPositional(true);
+        bansheeWail.setVolume(1);
+        rootNode.attachChild(bansheeWail);
     }
 }

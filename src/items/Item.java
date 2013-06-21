@@ -3,7 +3,6 @@ package items;
 /**
  *
  * @author MIKUiqnw0
- * @param 
  * @since 
  * @version 0.00.01
  */
@@ -18,9 +17,17 @@ abstract public class Item {
         this.type = type;
     }
     
+    /**
+     *
+     * @return
+     */
     public int getItemID() {
         return itemID;
     }
+    /**
+     *
+     * @return
+     */
     public ItemType getItemType() {
         return type;
     }
