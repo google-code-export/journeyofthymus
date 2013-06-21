@@ -15,12 +15,44 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  * @version 0.00.01
  */
 public interface ApplicationInterface {
+    /**
+     *
+     * @return
+     */
     public Node getRootNode();
+    /**
+     *
+     * @return
+     */
     public Node getGuiNode();
+    /**
+     *
+     * @return
+     */
     public AssetManager getAssetManager();
+    /**
+     *
+     * @return
+     */
     public InputManager getInputManager();
+    /**
+     *
+     * @return
+     */
     public AppStateManager getStateManager();
+    /**
+     *
+     * @return
+     */
     public ViewPort getViewPort();
+    /**
+     *
+     * @return
+     */
     public Camera getCamera();
+    /**
+     *
+     * @return
+     */
     public ScheduledThreadPoolExecutor getExecutor();
 }

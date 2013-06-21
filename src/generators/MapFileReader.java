@@ -4,9 +4,7 @@ package generators;
  * Reads map file formats so that it can be processed by the TerrainBuilder
  * object
  *
- * @author
- * @param
- * @since
+ * @author James
  * @version 0.00.01
  */
 import java.io.BufferedReader;
@@ -15,6 +13,10 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+/**
+ *
+ * @author MIKUiqnw0
+ */
 public class MapFileReader {
 
     public enum Direction {
@@ -25,9 +27,14 @@ public class MapFileReader {
     private static Tile[][] cleanMap = null;
     private static ArrayList<Direction> edges;
 
+    /**
+     *
+     * @param name
+     * @return
+     */
     public static Tile[][] loadMap(String name) {
 
-        Scanner s = null;
+        Scanner s = null; // Used to collect data from a file
         String line = null;
         boolean isSane = true;
 
@@ -168,10 +175,20 @@ public class MapFileReader {
         }
     }
 
+    /**
+     *
+     * @return
+     */
     public static int getDimensions() {
         return dimX;
     }
 
+    /**
+     *
+     * @param x
+     * @param y
+     * @return
+     */
     public static ArrayList<Direction> edge(int x, int y) {
         ArrayList<Direction> dir = new ArrayList<>();
         dir.add(Direction.Up);

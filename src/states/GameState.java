@@ -7,6 +7,7 @@ import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
+import com.jme3.bullet.control.KinematicRagdollControl;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.input.ChaseCamera;
@@ -18,7 +19,6 @@ import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.BloomFilter;
 import com.jme3.post.filters.FXAAFilter;
-import com.jme3.post.ssao.SSAOFilter;
 import com.jme3.renderer.queue.RenderQueue.ShadowMode;
 import com.jme3.scene.CameraNode;
 import com.jme3.scene.Geometry;
@@ -27,6 +27,7 @@ import com.jme3.scene.Spatial;
 import com.jme3.scene.control.CameraControl;
 import com.jme3.scene.shape.Box;
 import driver.ApplicationInterface;
+import generators.ObjectFactory;
 import generators.TerrainBuilder;
 import items.ItemController;
 import items.ItemType;
@@ -47,10 +48,20 @@ public class GameState extends AbstractAppState {
     private Node playerNode, lightNode, mapNode, itemNode, waypointNode;
     BitmapText text;
 
+    /**
+     *
+     * @param app
+     */
     public GameState(ApplicationInterface app) {
         this.app = app;
+      
     }
 
+    /**
+     *
+     * @param stateManager
+     * @param app
+     */
     @Override
     public void initialize(AppStateManager stateManager, Application app) {
         super.initialize(stateManager, app);
@@ -62,14 +73,13 @@ public class GameState extends AbstractAppState {
         initializeAI();
         initializeItems();
         initializeLighting();
-        initializePostProcessing();
+        initializePostProcessing();     
     }
 
     @Override
     public void update(float tpf) {
     }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
     private void initializeHUD() {
         BitmapFont guiFont = app.getAssetManager().loadFont("Interface/Fonts/Default.fnt");
         BitmapText debug = new BitmapText(guiFont, false);
@@ -79,8 +89,10 @@ public class GameState extends AbstractAppState {
         app.getGuiNode().attachChild(debug);
         text = (BitmapText) this.app.getGuiNode().getChild("debugline");
     }
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /*
+     * Creates several Node objects in a heriachy for controlled lighting and search functionality
+     */
     private void initializeNodes() {
         camNode = new CameraNode("Camera Node", app.getCamera());
         playerNode = new Node("Player");
@@ -102,7 +114,7 @@ public class GameState extends AbstractAppState {
     }
 
     private void initializeCamera() {
-        ChaseCamera chaseCam = new ChaseCamera(app.getCamera(), playerNode, app.getInputManager());
+        ChaseCamera chaseCam = new ChaseCamera(app.getCamera(), playerNode, app.getInputManager()); // Uses Chasecam to restrict y axis from toppling over the camera
         camNode.setControlDir(CameraControl.ControlDirection.CameraToSpatial);
         chaseCam.setDefaultDistance(0.001f);
         chaseCam.setInvertVerticalAxis(true);
@@ -117,12 +129,12 @@ public class GameState extends AbstractAppState {
     }
 
     private void initializePlayer() {
-        PlayerController playerControl = new PlayerController(app, camNode);
+        PlayerController playerControl = new PlayerController(app, camNode); // Formally CharacterControl, used to establish player movement
         app.getStateManager().getState(BulletAppState.class).getPhysicsSpace().add(playerControl);
         playerNode.addControl(playerControl);
         playerControl.setPhysicsLocation(terrainBuilder.getSpawnPoint());
 
-        TorchController torchControl = new TorchController(playerControl, lightNode, app);
+        TorchController torchControl = new TorchController(playerControl, lightNode, app); // Lighting module for the torch
         Geometry torch = new Geometry("Torch", new Box(.05f, .3f, .05f));
         Material torchMat = new Material(app.getAssetManager(), "Common/MatDefs/Light/Lighting.j3md");
         torchMat.setBoolean("UseMaterialColors", true);
@@ -137,15 +149,36 @@ public class GameState extends AbstractAppState {
     }
 
     private void initializeAI() {
-        Pathfinder pathfinder = new Pathfinder(app, false);
+        Pathfinder pathfinder = new Pathfinder(app, false); // Waypoint calculation module used by all AI
         Node bansheeNode = (Node) app.getAssetManager().loadModel("Models/Oto/Oto.mesh.xml");
+        KinematicRagdollControl ragdoll = new KinematicRagdollControl(2f);
         lightNode.attachChild(bansheeNode);
-        BansheeController bansheeControl = new BansheeController(playerNode.getControl(PlayerController.class), bansheeNode, pathfinder);
+        BansheeController bansheeControl = new BansheeController(app, ragdoll, playerNode.getControl(PlayerController.class), bansheeNode, pathfinder); // Enemy behaviour module
         bansheeNode.addControl(bansheeControl);
         app.getStateManager().getState(BulletAppState.class).getPhysicsSpace().add(bansheeControl);
         bansheeNode.setLocalScale(0.3f);
         bansheeNode.move(0, 1, 0);
-        bansheeControl.setPhysicsLocation(bansheeControl.getCurrentWaypoint().getLocalTranslation());
+        bansheeControl.setPhysicsLocation(new Vector3f(0, 10, 0));
+                //bansheeControl.getCurrentWaypoint().getLocalTranslation());
+               
+        ragdoll.addBoneName("hip.right");
+        ragdoll.addBoneName("hip.left");
+        ragdoll.addBoneName("spinehigh");
+        ragdoll.addBoneName("leg.right");
+        ragdoll.addBoneName("leg.left");
+        ragdoll.addBoneName("uparm.right");
+        ragdoll.addBoneName("uparm.left");
+        ragdoll.addBoneName("head");
+        ragdoll.addBoneName("foot.right");
+        ragdoll.addBoneName("foot.left");
+        ragdoll.addBoneName("arm.right");
+        ragdoll.addBoneName("arm.left");
+        ragdoll.addBoneName("hand.right");
+        ragdoll.addBoneName("hand.left");
+        
+        ragdoll.reBuild();
+
+        
     }
     /*    
      //////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -211,43 +244,46 @@ public class GameState extends AbstractAppState {
      */
 
     private void initializeItems() {
-        Spatial healthpot = app.getAssetManager().loadModel("Models/health_flask/health_flask.obj");
+        Spatial healthpot = ObjectFactory.makePotion(ItemType.HEALTHPOTION);
+        Spatial speedpot = ObjectFactory.makePotion(ItemType.SPEEDPOTION);
+        //Spatial boots = app.getAssetManager().loadModel("Models/health_flask/health_flask.obj");
+        Spatial oil = app.getAssetManager().loadModel("Models/health_flask/health_flask.obj");
+        Spatial tinder = app.getAssetManager().loadModel("Models/health_flask/health_flask.obj");
+        
         healthpot.setLocalScale(0.15f);
         healthpot.setLocalTranslation(0, -.27f, 0);
         Material mat = new Material(app.getAssetManager(), "Common/MatDefs/Light/Lighting.j3md");
         mat.setTexture("DiffuseMap", app.getAssetManager().loadTexture("Models/health_flask/health.jpg"));
         healthpot.setMaterial(mat);
 
-        //////// OIL ////////
-        //CompoundCollisionShape compound = new CompoundCollisionShape();
         BoxCollisionShape box = new BoxCollisionShape(new Vector3f(0.25f, 0.27f, 0.25f));
-        //compound.addChildShape(new BoxCollisionShape(new Vector3f(0.25f, 0.27f, 0.25f)), new Vector3f(0, 0.27f, 0));
-        ItemController itemControl = new ItemController(box, 0.3f, app, ItemType.OIL);
-        itemNode.addControl(itemControl);
+
+        //////// HEALTH ////////
+        ItemController HealthItemControl = new ItemController(box, 0.3f, app, ItemType.HEALTHPOTION); // Item collision behaviour module
+        itemNode.addControl(HealthItemControl);
         itemNode.attachChild(healthpot);
         healthpot.setShadowMode(ShadowMode.Cast);
-        app.getStateManager().getState(BulletAppState.class).getPhysicsSpace().add(itemControl);
-        itemControl.setPhysicsLocation(new Vector3f(8.015633f, 1.15746358f, 59.78405f));
-        //////// OIL ////////
+        app.getStateManager().getState(BulletAppState.class).getPhysicsSpace().add(HealthItemControl);
+        HealthItemControl.setPhysicsLocation(new Vector3f(8.015633f, 1.15746358f, 59.78405f));
     }
 
     private void initializeLighting() {
-        AmbientLight ambient = new AmbientLight();
+        AmbientLight ambient = new AmbientLight(); // Ambient light used for testing environments
         ambient.setColor(ColorRGBA.White.mult(1f));
-        //lightNode.addLight(ambient);
+        app.getRootNode().addLight(ambient);
     }
 
     private void initializePostProcessing() {
-        FilterPostProcessor fpp = new FilterPostProcessor(app.getAssetManager());
+        FilterPostProcessor fpp = new FilterPostProcessor(app.getAssetManager()); // Manages graphical filtering options available to JME
         app.getViewPort().addProcessor(fpp);
 
         //SSAOFilter ssaoFilter = new SSAOFilter(5.1f, 1.2f, 0.2f, 0.1f);
         //fpp.addFilter(ssaoFilter);
 
-        BloomFilter bloomFilter = new BloomFilter(BloomFilter.GlowMode.Objects);
+        BloomFilter bloomFilter = new BloomFilter(BloomFilter.GlowMode.Objects); // Bloom, allows for glowing objects
         fpp.addFilter(bloomFilter);
         
-        FXAAFilter fxaaFilter = new FXAAFilter();
+        FXAAFilter fxaaFilter = new FXAAFilter(); // Anti-aliasing filter
         fxaaFilter.setReduceMul(0.0f);
         fxaaFilter.setSubPixelShift(0.0f);
         fpp.addFilter(fxaaFilter);

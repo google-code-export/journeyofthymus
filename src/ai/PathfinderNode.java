@@ -16,7 +16,6 @@ import java.util.List;
 
 /**
  * @author MIKUiqnw0
- * @param 
  * @since 
  * @version 0.00.01
  */
@@ -27,6 +26,11 @@ public class PathfinderNode extends Node {
     private Geometry mark, line;
     private List<PathfinderNode> pfNodeList;
         
+    /**
+     *
+     * @param name
+     * @param pfNodeList
+     */
     public PathfinderNode(String name, List<PathfinderNode> pfNodeList) {
         super(name);
         h_heuristicValue = 0;
@@ -35,26 +39,53 @@ public class PathfinderNode extends Node {
         this.pfNodeList = pfNodeList;
     }
     
+    /**
+     *
+     * @return
+     */
     public int getHeuristic() {
         return h_heuristicValue;
     }
+    /**
+     *
+     * @return
+     */
     public int getMoveCost() {
         return g_movementCost;
     }
+    /**
+     *
+     * @return
+     */
     public int getTotalCost() {
         return f_totalCost = 0;
     }
+    /**
+     *
+     * @param value
+     */
     public void setHeuristic(int value) {
         h_heuristicValue = value;
     }
+    /**
+     *
+     * @param value
+     */
     public void setMoveCost(int value) {
         g_movementCost = value;
     }
     
+    /**
+     *
+     */
     public void calculateTotalCost() {
         f_totalCost = g_movementCost + h_heuristicValue;
     }
     
+    /**
+     *
+     * @param assetManager
+     */
     protected void initVisuals(AssetManager assetManager) {
         Box box = new Box(.05f, .05f, .05f);
         mark = new Geometry("box", box);
@@ -68,9 +99,13 @@ public class PathfinderNode extends Node {
     /*
      * Each PathfinderNode requires knowledge of neighbouring PathfinderNodes
      */
+    /**
+     *
+     * @param assetManager
+     */
     public void locateAdjacentNodes(AssetManager assetManager) {
-        CollisionResults[] results = new CollisionResults[4];
-        Ray[] ray = new Ray[4];
+        CollisionResults[] results = new CollisionResults[4]; // CollisionResults collects collision entries caught by line 132.
+        Ray[] ray = new Ray[4]; // Ray is used to produce a collidable object that fires from a position to a target point
         initVisuals(assetManager);
         
         for(int i = 0; i < 4; ++i) {

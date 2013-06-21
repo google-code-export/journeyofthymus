@@ -15,11 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- *
- *
  * @author MIKUiqnw0
- * @param app
- * @param debug
  * @since 4/06/2013
  * @version 0.00.01
  */
@@ -42,7 +38,8 @@ public class Pathfinder {
     private PathfinderNode targetNode = null;
 
     /**
-     * @params app
+     * @param app
+     * @param debug
      */
     public Pathfinder(ApplicationInterface app, boolean debug) {
         dimX = MapFileReader.getDimensions();
@@ -57,6 +54,11 @@ public class Pathfinder {
         buildGraph();
     }
 
+    /**
+     *
+     * @return
+     * @throws NullPointerException
+     */
     public List<PathfinderNode> getNodeList() throws NullPointerException {
         if(pfNodeList == null) {
             throw new NullPointerException("The waypoint graph was not created prior this method.");
@@ -96,10 +98,10 @@ public class Pathfinder {
             }
         }
     }
-    
-    private void calculateAllHeuristics() {
-        
-    }
+//    
+//    private void calculateAllHeuristics() {
+//        
+//    }
 
     private Spatial createDebugVisuals() {
         Box phBox = new Box(.2f, .2f, .2f);
@@ -111,10 +113,18 @@ public class Pathfinder {
         return pfGeom;
     }
 
+    /**
+     *
+     * @param value
+     */
     public void enableDebugVisuals(boolean value) {
         isDebugActive = value;
     }
 
+    /**
+     *
+     * @return
+     */
     public static boolean isDebugActive() {
         return isDebugActive;
     }

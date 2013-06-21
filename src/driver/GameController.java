@@ -6,13 +6,30 @@ package driver;
 
 /**
  *
- * @author MDM110-09
+ * @author James
  */
 public interface GameController {
 
+    /**
+     *
+     * @param nextScreen
+     */
     void startGame(String nextScreen);
+    /**
+     *
+     * @param toggle
+     */
     void toggleDebugShapes(boolean toggle);
+    /**
+     *
+     */
     void pause();
+    /**
+     *
+     */
     void endGame();
+    /**
+     *
+     */
     void quitGame();
 }

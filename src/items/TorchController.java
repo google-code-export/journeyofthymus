@@ -44,7 +44,14 @@ public class TorchController extends AbstractControl {
     private float g_tpf;
     private ScheduledThreadPoolExecutor executor;
     private Future future;
+    private Callable updateLight;
 
+    /**
+     *
+     * @param player
+     * @param lightNode
+     * @param app
+     */
     public TorchController(PlayerController player, Node lightNode, ApplicationInterface app) {
         oilTimer = OIL_TIMER_MAX;
         tinderTimer = TINDER_TIMER_MAX;
@@ -56,32 +63,59 @@ public class TorchController extends AbstractControl {
         executor = app.getExecutor();
         createLight();
         createParticles();
+        createCallable();
     }
 
+    /**
+     * @return current value of the oil timer affected by time per frame
+     */
     public float getOilTimer() {
         return oilTimer;
     }
 
+    /**
+     *
+     * @return current value of the tinder timer affected by time per frame
+     */
     public float getTinderTimer() {
         return tinderTimer;
     }
 
+    /**
+     *
+     * @return maximum value that oil timer can be applied
+     */
     public static float getMaxOilTime() {
         return OIL_TIMER_MAX;
     }
 
+    /**
+     *
+     * @return maximum value that tinder timer can be applied
+     */
     public static float getMaxTinderTime() {
         return TINDER_TIMER_MAX;
     }
 
+    /**
+     *
+     * @param modifier positive or negative value to affect oil timer by
+     */
     public void setOilTimer(float modifier) {
         oilTimer += (oilTimer + modifier > OIL_TIMER_MAX) ? OIL_TIMER_MAX - oilTimer : modifier;
     }
 
+    /**
+     *
+     * @param modifier positive or negative value to affect tinder timer by
+     */
     public void setTinderTimer(float modifier) {
         tinderTimer += (tinderTimer + modifier > TINDER_TIMER_MAX) ? TINDER_TIMER_MAX - tinderTimer : modifier;
     }
 
+    /**
+     *  Affects oil inventory and oil timer values
+     */
     public void useOil() {
         if (player.isPositiveInventory(ItemType.OIL)) {
             if (oilTimer < OIL_TIMER_MAX) {
@@ -91,6 +125,9 @@ public class TorchController extends AbstractControl {
         }
     }
 
+    /**
+     * Affects tinder inventory and tinder timer values
+     */
     public void useTinder() {
         if (player.isPositiveInventory(ItemType.TINDER)) {
             if (tinderTimer < TINDER_TIMER_MAX) {
@@ -98,6 +135,62 @@ public class TorchController extends AbstractControl {
                 player.setTinderCount(-1);
             }
         }
+    }
+
+    private void createCallable() {
+        updateLight = new Callable() {
+            @Override
+            public Object call() throws Exception {
+                // Adjust torch lighting based on fuel properties
+                if (oilTimer <= 0 || tinderTimer <= 0) {
+                    if (light.getRadius() > 0.001f) {
+                        if (targetLevel != 0.001f) {
+                            statusOff = true;
+                            targetLevel = 0.001f;
+                            initialLevel = light.getRadius();
+                            lightTimer = 10.0f;
+                            timeToUpdate = lightTimer;
+                        }
+
+                        if (particleTimer <= 0 && lightTimer >= 0) {
+                            fire.setParticlesPerSec(lightTimer);
+                            particleTimer = 1;
+                        }
+
+                        light.setRadius(FastMath.interpolateLinear(lightTimer / timeToUpdate, targetLevel, initialLevel));
+                        lightTimer -= g_tpf;
+                        particleTimer -= g_tpf;
+
+                        BitmapText text = (BitmapText) guiNode.getChild("debugline");
+                        text.setText("Current Radius: " + light.getRadius() + " | Timer: " + lightTimer + " | True 0.001: " + (light.getRadius() == 0.001f));
+                    } else if (fire.getParticlesPerSec() != 0) {
+                        fire.setParticlesPerSec(0);
+                    } else if (fire.getNumVisibleParticles() == 0) {
+                        fire.setEnabled(false);
+                    }
+                } else {
+                    if (lightTimer <= 0 || statusOff) {
+                        statusOff = false;
+                        lightTimer = 0.15f;
+                        initialLevel = light.getRadius();
+                        timeToUpdate = lightTimer;
+                        if (oilTimer < LIFE_LOW || tinderTimer < LIFE_LOW) {
+                            targetLevel = lowFlicker();
+                        } else {
+                            targetLevel = highFlicker();
+                        }
+                        if (!fire.isEnabled()) {
+                            fire.setEnabled(true);
+                        }
+                        fire.setParticlesPerSec(targetLevel);
+                    }
+
+                    lightTimer -= g_tpf;
+                    light.setRadius(FastMath.interpolateLinear(lightTimer / timeToUpdate, targetLevel, initialLevel));
+                }
+                return null;
+            }
+        };
     }
 
     private void createLight() {
@@ -162,65 +255,21 @@ public class TorchController extends AbstractControl {
             }
         }
     }
-    
-    private Callable updateLight = new Callable() {
-        @Override
-        public Object call() throws Exception {
-            // Adjust torch lighting based on fuel properties
-            if (oilTimer <= 0 || tinderTimer <= 0) {
-                if (light.getRadius() > 0.001f) {
-                    if (targetLevel != 0.001f) {
-                        statusOff = true;
-                        targetLevel = 0.001f;
-                        initialLevel = light.getRadius();
-                        lightTimer = 10.0f;
-                        timeToUpdate = lightTimer;
-                    }
 
-                    if (particleTimer <= 0 && lightTimer >= 0) {
-                            fire.setParticlesPerSec(lightTimer);
-                            particleTimer = 1;
-                    }
-
-                    light.setRadius(FastMath.interpolateLinear(lightTimer / timeToUpdate, targetLevel, initialLevel));
-                    lightTimer -= g_tpf;
-                    particleTimer -= g_tpf;
-
-                    BitmapText text = (BitmapText) guiNode.getChild("debugline");
-                    text.setText("Current Radius: " + light.getRadius() + " | Timer: " + lightTimer + " | True 0.001: " + (light.getRadius() == 0.001f));
-                } else if (fire.getParticlesPerSec() != 0) {
-                    fire.setParticlesPerSec(0);
-                } else if (fire.getNumVisibleParticles() == 0) {
-                    fire.setEnabled(false);
-                }
-            } else {
-                if (lightTimer <= 0 || statusOff) {
-                    statusOff = false;
-                    lightTimer = 0.15f;
-                    initialLevel = light.getRadius();
-                    timeToUpdate = lightTimer;
-                    if (oilTimer < LIFE_LOW || tinderTimer < LIFE_LOW) {
-                        targetLevel = lowFlicker();
-                    } else {
-                        targetLevel = highFlicker();
-                    }
-                    if (!fire.isEnabled()) {
-                        fire.setEnabled(true);
-                    }
-                    fire.setParticlesPerSec(targetLevel);
-                }
-
-                lightTimer -= g_tpf;
-                light.setRadius(FastMath.interpolateLinear(lightTimer / timeToUpdate, targetLevel, initialLevel));
-            }
-            return null;
-        }
-    };
-
+    /**
+     *
+     * @param rm
+     * @param vp
+     */
     @Override
     protected void controlRender(RenderManager rm, ViewPort vp) {
     }
 
+    /**
+     *
+     * @param spatial
+     * @return
+     */
     @Override
     public Control cloneForSpatial(Spatial spatial) {
         return null;

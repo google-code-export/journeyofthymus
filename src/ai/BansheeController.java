@@ -4,12 +4,16 @@ import com.jme3.animation.AnimChannel;
 import com.jme3.animation.AnimControl;
 import com.jme3.animation.AnimEventListener;
 import com.jme3.animation.LoopMode;
+import com.jme3.bullet.BulletAppState;
+import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
 import com.jme3.bullet.control.CharacterControl;
+import com.jme3.bullet.control.KinematicRagdollControl;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
+import driver.ApplicationInterface;
 import java.util.List;
 import java.util.Random;
 import player.PlayerController;
@@ -39,13 +43,21 @@ public class BansheeController extends CharacterControl implements AnimEventList
     private PathfinderNode currentWaypoint;   
     private boolean isWalking;
     private Node attachedObject;
+    private PhysicsSpace pSpace;
+    private KinematicRagdollControl ragdoll;
 
     private enum AIState {
 
         IDLE, TRAVERSE_WAYPOINT, TARGET_CHASE, TARGET_LOST, TARGET_ATTACK, RECYCLE
     };
     
-    public BansheeController(PlayerController player, Node attachedObject, Pathfinder pathfinder) {
+    /**
+     *
+     * @param player
+     * @param attachedObject
+     * @param pathfinder
+     */
+    public BansheeController(ApplicationInterface app, KinematicRagdollControl ragdoll, PlayerController player, Node attachedObject, Pathfinder pathfinder) {
         super(new CapsuleCollisionShape(0.6f, 2f, 1), 0.55f);
         moveSpeed = player.getMoveSpeed() - 0.03f;
         aiState = AIState.TARGET_CHASE;
@@ -57,6 +69,11 @@ public class BansheeController extends CharacterControl implements AnimEventList
         this.attachedObject = attachedObject;
         pfNodeList = pathfinder.getNodeList();
         currentWaypoint = pfNodeList.get(new Random().nextInt(pfNodeList.size()));
+        pSpace = app.getStateManager().getState(BulletAppState.class).getPhysicsSpace();
+        this.ragdoll = ragdoll;
+        pSpace.add(ragdoll);
+        attachedObject.addControl(ragdoll);
+        ragdoll.setEnabled(false);
     }
 
     @Override
@@ -79,7 +96,7 @@ public class BansheeController extends CharacterControl implements AnimEventList
                 walkDirection.addLocal(player.getPhysicsLocation().subtractLocal(getPhysicsLocation())).normalizeLocal();
                 walkDirection.multLocal(moveSpeed);
                 setViewDirection(playerPosition);
-                if (getPhysicsLocation().distance(player.getPhysicsLocation()) > 2.5f) {
+                if (getPhysicsLocation().distance(player.getPhysicsLocation()) > 8.5f) { // 2.5f
                     setWalkDirection(walkDirection);
                     if (!isWalking) {
                         isWalking = true;
@@ -107,11 +124,18 @@ public class BansheeController extends CharacterControl implements AnimEventList
                 
                 player.setHealth(damage);
                 aiState = AIState.RECYCLE;
+                setEnabled(false);
+                ragdoll.setEnabled(true);
+                ragdoll.setRagdollMode();
+
+
                 break;
             case RECYCLE:
                 if (deathTimer <= 0) {
                     aiState = AIState.IDLE;
                     deathTimer = 30;
+                    ragdoll.setEnabled(false);
+                    setEnabled(true);
                 } else {
                     deathTimer -= tpf;
                 }
@@ -119,14 +143,30 @@ public class BansheeController extends CharacterControl implements AnimEventList
         }
     }
 
+    /**
+     *
+     * @return
+     */
     public PathfinderNode getCurrentWaypoint() {
         return currentWaypoint;
     }
     
+    /**
+     *
+     * @param control
+     * @param channel
+     * @param animName
+     */
     @Override
     public void onAnimCycleDone(AnimControl control, AnimChannel channel, String animName) {
     }
 
+    /**
+     *
+     * @param control
+     * @param channel
+     * @param animName
+     */
     @Override
     public void onAnimChange(AnimControl control, AnimChannel channel, String animName) {
     }

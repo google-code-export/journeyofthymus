@@ -19,10 +19,16 @@ public class SoundController extends AbstractControl {
     private Node rootNode;
     private AudioNode musicAmbient,
                         musicTheme;
-    public enum soundEvent{MUSIC_AMBIENT,
-                            MUSIC_THEME};
+
+    public enum soundEvent{
+        MUSIC_AMBIENT, MUSIC_THEME};
     
     
+    /**
+     *
+     * @param assetManager
+     * @param rootNode
+     */
     public SoundController(AssetManager assetManager, Node rootNode)
     {
         this.assetManager = assetManager;
@@ -34,16 +40,30 @@ public class SoundController extends AbstractControl {
         
     }
 
+    /**
+     *
+     * @param rm
+     * @param vp
+     */
     @Override
     protected void controlRender(RenderManager rm, ViewPort vp) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    /**
+     *
+     * @param spatial
+     * @return
+     */
     @Override
     public Control cloneForSpatial(Spatial spatial) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
     
+    /**
+     *
+     * @param event
+     */
     public void playSound(soundEvent event)
     {
         switch(event)
@@ -59,6 +79,10 @@ public class SoundController extends AbstractControl {
         }
     }
     
+    /**
+     *
+     * @param event
+     */
     public void stopSound(soundEvent event)
     {
         switch(event)
@@ -74,6 +98,9 @@ public class SoundController extends AbstractControl {
         }
     }
     
+    /**
+     *
+     */
     public void initAudio()
     {
         //Looping ambient music

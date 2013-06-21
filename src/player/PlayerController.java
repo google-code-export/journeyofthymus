@@ -20,7 +20,6 @@ import items.TorchController;
  * input controls.
  *
  * @author MIKUiqnw0
- * @param inputManager Requires the inputManager object to implement controls
  * @since 8/03/2013
  * @version 0.00.02
  */
@@ -35,6 +34,11 @@ public class PlayerController extends CharacterControl implements ActionListener
     private InputManager inputManager;
     private Node camNode;
 
+    /**
+     *
+     * @param app
+     * @param camNode
+     */
     public PlayerController(ApplicationInterface app, Node camNode) {
         super(new CapsuleCollisionShape(0.6f, 2f, 1), 0.55f);
         health = 100;
@@ -48,67 +52,131 @@ public class PlayerController extends CharacterControl implements ActionListener
         setupKeys();
     }
 
+    /**
+     *
+     * @return
+     */
     public int getHealth() {
         return health;
     }
 
+    /**
+     *
+     * @return
+     */
     public int getHealthPotCount() {
         return invHealthPotion;
     }
 
+    /**
+     *
+     * @return
+     */
     public int getSpeedPotCount() {
         return invSpeedPot;
     }
 
+    /**
+     *
+     * @return
+     */
     public int getOilCount() {
         return invOil;
     }
 
+    /**
+     *
+     * @return
+     */
     public int getTinderCount() {
         return invTinder;
     }
 
+    /**
+     *
+     * @return
+     */
     public float getMoveSpeed() {
         return moveSpeed;
     }
 
+    /**
+     *
+     * @return
+     */
     public float getRegenRate() {
         return regenRate;
     }
 
+    /**
+     *
+     * @return
+     */
     public int getRegenAmount() {
         return regenAmount;
     }
 
+    /**
+     *
+     * @param modifier
+     */
     public void setHealth(int modifier) {
         health += modifier;
         // Add validation
     }
 
+    /**
+     *
+     * @param newMoveSpeed
+     */
     public void setMoveSpeed(float newMoveSpeed) {
         moveSpeed = newMoveSpeed;
     }
 
+    /**
+     *
+     * @param newRegenRate
+     */
     public void setRegenRate(float newRegenRate) {
         regenRate = newRegenRate;
     }
 
+    /**
+     *
+     * @param newRegenAmount
+     */
     public void setRegenAmount(int newRegenAmount) {
         regenAmount = newRegenAmount;
     }
 
+    /**
+     *
+     * @param modifier
+     */
     public void setHealthPotionCount(int modifier) {
         invHealthPotion += modifier;
     }
 
+    /**
+     *
+     * @param modifier
+     */
     public void setSpeedPotionCount(int modifier) {
         invSpeedPot += modifier;
     }
 
+    /**
+     *
+     * @param modifier
+     */
     public void setOilCount(int modifier) {
         invOil += modifier;
     }
 
+    /**
+     *
+     * @param modifier
+     */
     public void setTinderCount(int modifier) {
         invTinder += modifier;
     }
@@ -146,11 +214,18 @@ public class PlayerController extends CharacterControl implements ActionListener
         // world interaction method, like doors
     }
 
+    /**
+     *
+     */
     public void enableSprint() {
         canSprint = true;
     }
 
-    // Experiment with collection 
+    /**
+     *
+     * @param type
+     * @return
+     */
     public boolean isPositiveInventory(ItemType type) {
         if ((type == ItemType.HEALTHPOTION && invHealthPotion > 0)
                 || (type == ItemType.SPEEDPOTION && invSpeedPot > 0)
@@ -251,6 +326,9 @@ public class PlayerController extends CharacterControl implements ActionListener
 
     /*
      * Initializes the default player keyboard setup for Journey of Thymus
+     */
+    /**
+     *
      */
     public final void setupKeys() {
         inputManager.addMapping("Left", new KeyTrigger(KeyInput.KEY_A));

@@ -17,27 +17,51 @@ public class MenuState extends AbstractAppState implements ScreenController {
 
     GameController gameController;
     
+    /**
+     *
+     * @param gameController
+     */
     public MenuState(GameController gameController) {
         this.gameController = gameController;
     }
     
+    /**
+     *
+     * @param nextScreen
+     */
     public void start(String nextScreen) {
         gameController.startGame(nextScreen);
     }
 
+    /**
+     *
+     * @param id
+     * @param event
+     */
     @NiftyEventSubscriber(id="debugShapeCheckbox")
     public void onAllCheckBoxChanged(final String id, final CheckBoxStateChangedEvent event) {
         gameController.toggleDebugShapes(event.isChecked());
     }
     
+    /**
+     *
+     */
     public void quit() {
         gameController.quitGame();
     }
     
+    /**
+     *
+     * @param stateManager
+     */
     @Override
     public void stateAttached(AppStateManager stateManager) {
     }
     
+    /**
+     *
+     * @param stateManager
+     */
     @Override
     public void stateDetached(AppStateManager stateManager) {
     }
@@ -46,6 +70,11 @@ public class MenuState extends AbstractAppState implements ScreenController {
     public void update(float tpf) {
     }
     
+    /**
+     *
+     * @param nifty
+     * @param screen
+     */
     @Override
     public void bind(Nifty nifty, Screen screen) {
         

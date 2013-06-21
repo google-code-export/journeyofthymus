@@ -6,6 +6,7 @@ import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
+import com.jme3.effect.ParticleEmitter;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue.ShadowMode;
 import com.jme3.scene.Node;
@@ -19,7 +20,8 @@ import java.util.Random;
 
 /**
  *
- * @author @param @since @version 0.00.01
+ * @author James
+ * @version 0.01.00
  */
 public class TerrainBuilder {
 
@@ -41,6 +43,11 @@ public class TerrainBuilder {
     private Tile[][] map;
     Graphics g;
 
+    /**
+     *
+     * @param app
+     * @param mapNode
+     */
     public TerrainBuilder(ApplicationInterface app, Node mapNode) {
         this.assetManager = app.getAssetManager();
         this.mapNode = mapNode;
@@ -48,6 +55,9 @@ public class TerrainBuilder {
         physicsSpace = app.getStateManager().getState(BulletAppState.class).getPhysicsSpace();
     }
 
+    /**
+     *
+     */
     public void buildMap() {
 
         int dimX,
@@ -62,19 +72,20 @@ public class TerrainBuilder {
         dimX = MapFileReader.getDimensions();
         ObjectFactory.setAssetManager(assetManager);
 
-        BufferedImage bitmap = new BufferedImage(dimX, dimX, BufferedImage.TYPE_INT_ARGB);
+        // BufferedImage, used to create a writable image for the minimap feature
+        BufferedImage bitmap = new BufferedImage(dimX, dimX, BufferedImage.TYPE_INT_ARGB); 
         g = bitmap.getGraphics();
 
         for (iY = 0; iY < dimX; iY++) {
             for (iX = 0; iX < dimX; iX++) {
                 switch (map[iX][iY].code) {
                     case 'B':
-                        block = ObjectFactory.makeBlock(BLOCK_WIDTH, BLOCK_HEIGHT, String.valueOf(iX) + String.valueOf(iY));
-                        block.setLocalTranslation((BLOCK_WIDTH * iX), -2, (BLOCK_WIDTH * iY));
-                        block.scale(2, 1, 2);
-                        block.setShadowMode(ShadowMode.CastAndReceive);
-                        mapNode.attachChild(block);
-                        g.setColor(Color.GRAY);
+//                        block = ObjectFactory.makeBlock(BLOCK_WIDTH, BLOCK_HEIGHT, String.valueOf(iX) + String.valueOf(iY));
+//                        block.setLocalTranslation((BLOCK_WIDTH * iX), -2, (BLOCK_WIDTH * iY));
+//                        block.scale(2, 1, 2);
+//                        block.setShadowMode(ShadowMode.CastAndReceive);
+//                        mapNode.attachChild(block);
+//                        g.setColor(Color.GRAY);
                         break;
                     case 'S':
                         spawnPoint = new Node("SpawnPoint");
@@ -115,23 +126,26 @@ public class TerrainBuilder {
             }
         }
 
-        for (float i = 1; i < SEGMENTS; i += 2) {
-            for (float j = 1; j < SEGMENTS; j += 2) {
-                ceiling = ObjectFactory.makeCeiling(dimX * BLOCK_WIDTH / (SEGMENTS / 2));
-                ceiling.setLocalTranslation(dimX * BLOCK_WIDTH * i / SEGMENTS - (BLOCK_WIDTH / 2),
-                        ((BLOCK_HEIGHT / 2) + 0.25f),
-                        dimX * BLOCK_WIDTH * j / SEGMENTS - (BLOCK_WIDTH / 2));
-                ceiling.setShadowMode(ShadowMode.Receive);
-                mapNode.attachChild(ceiling);
-            }
-        }
+//        for (float i = 1; i < SEGMENTS; i += 2) {
+//            for (float j = 1; j < SEGMENTS; j += 2) {
+//                ceiling = ObjectFactory.makeCeiling(dimX * BLOCK_WIDTH / (SEGMENTS / 2));
+//                ceiling.setLocalTranslation(dimX * BLOCK_WIDTH * i / SEGMENTS - (BLOCK_WIDTH / 2),
+//                        ((BLOCK_HEIGHT / 2) + 0.25f),
+//                        dimX * BLOCK_WIDTH * j / SEGMENTS - (BLOCK_WIDTH / 2));
+//                ceiling.setShadowMode(ShadowMode.Receive);
+//                mapNode.attachChild(ceiling);
+//            }
+//        }
 
         CollisionShape labyrinthShape = CollisionShapeFactory.createMeshShape(mapNode);
-        RigidBodyControl labyrinth = new RigidBodyControl(labyrinthShape, 0);
+        RigidBodyControl labyrinth = new RigidBodyControl(labyrinthShape, 0); // RigidBodyControl is used for solid objects and their collision properties
         mapNode.addControl(labyrinth);
 
         physicsSpace.add(labyrinth);
         lightNode.attachChild(mapNode);
+        
+        ParticleEmitter fog = ObjectFactory.makeFog();
+        lightNode.attachChild(fog);
     }
 
     private void placeDec(String decType, int x, int z) {
@@ -211,6 +225,10 @@ public class TerrainBuilder {
                 (BLOCK_WIDTH * z) + zOffset);
     }
 
+    /**
+     *
+     * @return A Vector3f to the players initial spawn location
+     */
     public Vector3f getSpawnPoint() {
         return spawnPoint.getLocalTranslation();
     }
