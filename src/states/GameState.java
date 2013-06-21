@@ -76,7 +76,7 @@ public class GameState extends AbstractAppState implements PhysicsCollisionListe
     @Override
     public void update(float tpf) {
         if(bansheeWailTimer > 0) {
-            bansheeWailTimer -= 1;
+            bansheeWailTimer -= tpf;
         }
     }
 
@@ -278,14 +278,10 @@ public class GameState extends AbstractAppState implements PhysicsCollisionListe
     @Override
     public void collision(PhysicsCollisionEvent event) {
         if(event.getNodeA().getUserData("name") != null && event.getNodeB().getUserData("name") != null) {
-            if (event.getNodeA().getUserData("name").equals("Banshee") && event.getNodeB().getUserData("name").equals("TriggerVolume")) {
+            if ((event.getNodeA().getUserData("name").equals("Banshee") && event.getNodeB().getUserData("name").equals("TriggerVolume")) ||
+                    (event.getNodeA().getUserData("name").equals("TriggerVolume") && event.getNodeB().getUserData("name").equals("Banshee"))) {
                 if(bansheeWailTimer == 0) {
                     soundController.play3dSound(SoundController.soundEvent.BANSHEE_WAIL, event.getNodeA().getLocalTranslation());
-                    bansheeWailTimer = 3000;
-                }
-            } else if (event.getNodeB().getUserData("name").equals("Banshee") && event.getNodeA().getUserData("name").equals("TriggerVolume")) {
-                if(bansheeWailTimer == 0) {
-                    soundController.play3dSound(SoundController.soundEvent.BANSHEE_WAIL, event.getNodeB().getLocalTranslation());
                     bansheeWailTimer = 3000;
                 }
             }
