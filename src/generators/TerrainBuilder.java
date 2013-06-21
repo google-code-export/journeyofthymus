@@ -83,12 +83,12 @@ public class TerrainBuilder {
             for (iX = 0; iX < dimX; iX++) {
                 switch (map[iX][iY].code) {
                     case 'B':
-//                        block = ObjectFactory.makeBlock(BLOCK_WIDTH, BLOCK_HEIGHT, String.valueOf(iX) + String.valueOf(iY));
-//                        block.setLocalTranslation((BLOCK_WIDTH * iX), -2, (BLOCK_WIDTH * iY));
-//                        block.scale(2, 1, 2);
-//                        block.setShadowMode(ShadowMode.CastAndReceive);
-//                        mapNode.attachChild(block);
-//                        g.setColor(Color.GRAY);
+                        block = ObjectFactory.makeBlock(BLOCK_WIDTH, BLOCK_HEIGHT, String.valueOf(iX) + String.valueOf(iY));
+                        block.setLocalTranslation((BLOCK_WIDTH * iX), -2, (BLOCK_WIDTH * iY));
+                        block.scale(2, 1, 2);
+                        block.setShadowMode(ShadowMode.CastAndReceive);
+                        mapNode.attachChild(block);
+                        g.setColor(Color.GRAY);
                         break;
                     case 'S':
                         spawnPoint = new Node("SpawnPoint");
@@ -138,16 +138,16 @@ public class TerrainBuilder {
             }
         }
 
-//        for (float i = 1; i < SEGMENTS; i += 2) {
-//            for (float j = 1; j < SEGMENTS; j += 2) {
-//                ceiling = ObjectFactory.makeCeiling(dimX * BLOCK_WIDTH / (SEGMENTS / 2));
-//                ceiling.setLocalTranslation(dimX * BLOCK_WIDTH * i / SEGMENTS - (BLOCK_WIDTH / 2),
-//                        ((BLOCK_HEIGHT / 2) + 0.25f),
-//                        dimX * BLOCK_WIDTH * j / SEGMENTS - (BLOCK_WIDTH / 2));
-//                ceiling.setShadowMode(ShadowMode.Receive);
-//                mapNode.attachChild(ceiling);
-//            }
-//        }
+        for (float i = 1; i < SEGMENTS; i += 2) {
+            for (float j = 1; j < SEGMENTS; j += 2) {
+                ceiling = ObjectFactory.makeCeiling(dimX * BLOCK_WIDTH / (SEGMENTS / 2));
+                ceiling.setLocalTranslation(dimX * BLOCK_WIDTH * i / SEGMENTS - (BLOCK_WIDTH / 2),
+                        ((BLOCK_HEIGHT / 2) + 0.25f),
+                        dimX * BLOCK_WIDTH * j / SEGMENTS - (BLOCK_WIDTH / 2));
+                ceiling.setShadowMode(ShadowMode.Receive);
+                mapNode.attachChild(ceiling);
+            }
+        }
 
         CollisionShape labyrinthShape = CollisionShapeFactory.createMeshShape(mapNode);
         RigidBodyControl labyrinth = new RigidBodyControl(labyrinthShape, 0); // RigidBodyControl is used for solid objects and their collision properties

@@ -176,8 +176,7 @@ public class GameState extends AbstractAppState implements PhysicsCollisionListe
         app.getStateManager().getState(BulletAppState.class).getPhysicsSpace().add(bansheeControl);
         bansheeNode.setLocalScale(0.3f);
         bansheeNode.move(0, 1, 0);
-        bansheeControl.setPhysicsLocation(new Vector3f(0, 10, 0));
-                //bansheeControl.getCurrentWaypoint().getLocalTranslation());
+        bansheeControl.setPhysicsLocation(bansheeControl.getCurrentWaypoint().getLocalTranslation());
                
         ragdoll.addBoneName("hip.right");
         ragdoll.addBoneName("hip.left");
@@ -203,68 +202,6 @@ public class GameState extends AbstractAppState implements PhysicsCollisionListe
         physicsSpace = app.getStateManager().getState(BulletAppState.class).getPhysicsSpace();
         physicsSpace.addCollisionListener(this);
     }
-    /*    
-     //////////////////////////////////////////////////////////////////////////////////////////////////////////
-     private void testRagdolls() {
-     Node shoulders = createLimb(0.1f, 0.2f, new Vector3f(0.00f, 1.5f, 0), true);
-     Node uArmL = createLimb(0.1f, 0.2f, new Vector3f(-0.75f, 0.8f, 0), false);
-     Node uArmR = createLimb(0.1f, 0.2f, new Vector3f(0.75f, 0.8f, 0), false);
-     Node lArmL = createLimb(0.1f, 0.2f, new Vector3f(-0.75f, -0.2f, 0), false);
-     Node lArmR = createLimb(0.1f, 0.2f, new Vector3f(0.75f, -0.2f, 0), false);
-     Node body = createLimb(0.1f, 0.2f, new Vector3f(0.00f, 0.5f, 0), false);
-     Node hips = createLimb(0.1f, 0.2f, new Vector3f(0.00f, -0.5f, 0), true);
-     Node uLegL = createLimb(0.1f, 0.2f, new Vector3f(-0.25f, -1.2f, 0), false);
-     Node uLegR = createLimb(0.1f, 0.2f, new Vector3f(0.25f, -1.2f, 0), false);
-     Node lLegL = createLimb(0.1f, 0.2f, new Vector3f(-0.25f, -2.2f, 0), false);
-     Node lLegR = createLimb(0.1f, 0.2f, new Vector3f(0.25f, -2.2f, 0), false);
-        
-     join(body,  shoulders, new Vector3f( 0.00f,  1.4f, 0));
-     join(body,       hips, new Vector3f( 0.00f, -0.5f, 0));
-     join(uArmL, shoulders, new Vector3f(-0.75f,  1.4f, 0));
-     join(uArmR, shoulders, new Vector3f( 0.75f,  1.4f, 0));
-     join(uArmL,     lArmL, new Vector3f(-0.75f,  0.4f, 0));
-     join(uArmR,     lArmR, new Vector3f( 0.75f,  0.4f, 0));
-     join(uLegL,      hips, new Vector3f(-0.25f, -0.5f, 0));
-     join(uLegR,      hips, new Vector3f( 0.25f, -0.5f, 0));
-     join(uLegL,     lLegL, new Vector3f(-0.25f, -1.7f, 0));
-     join(uLegR,     lLegR, new Vector3f( 0.25f, -1.7f, 0));
-     Node ragDoll = new Node("ragdoll");
-     ragDoll.attachChild(shoulders);
-     ragDoll.attachChild(body);
-     ragDoll.attachChild(hips);
-     ragDoll.attachChild(uArmL);
-     ragDoll.attachChild(uArmR);
-     ragDoll.attachChild(lArmL);
-     ragDoll.attachChild(lArmR);
-     ragDoll.attachChild(uLegL);
-     ragDoll.attachChild(uLegR);
-     ragDoll.attachChild(lLegL);
-     ragDoll.attachChild(lLegR);
-     app.getRootNode().attachChild(ragDoll);
-     app.getStateManager().getState(BulletAppState.class).getPhysicsSpace().addAll(ragDoll);    
-     }
-
-     private Node createLimb(float width, float height, Vector3f location, boolean rotate) {
-     int axis = rotate ? PhysicsSpace.AXIS_X : PhysicsSpace.AXIS_Y;
-     CapsuleCollisionShape shape = new CapsuleCollisionShape(width, height, axis);
-     Node node = new Node("Limb");
-     RigidBodyControl rigidBodyControl = new RigidBodyControl(shape, 1);
-     node.setLocalTranslation(location);
-     node.addControl(rigidBodyControl);
-     return node;
-     }
-   
-     private PhysicsJoint join(Node A, Node B, Vector3f connectionPoint) {
-     Vector3f pivotA = A.worldToLocal(connectionPoint, new Vector3f());
-     Vector3f pivotB = B.worldToLocal(connectionPoint, new Vector3f());
-     ConeJoint joint = new ConeJoint(A.getControl(RigidBodyControl.class),
-     B.getControl(RigidBodyControl.class),
-     pivotA, pivotB);
-     joint.setLimit(1f, 1f, 0);
-     return joint;
-     }
-     //////////////////////////////////////////////////////////////////////////////////////////////////////////
-     */
 
     private void initializeItems() {
         Spatial healthpot = ObjectFactory.makePotion(ItemType.HEALTHPOTION);
@@ -314,12 +251,14 @@ public class GameState extends AbstractAppState implements PhysicsCollisionListe
 
     @Override
     public void collision(PhysicsCollisionEvent event) {
-        if(event.getNodeA().getUserData("name") != null && event.getNodeB().getUserData("name") != null) {
-            if ((event.getNodeA().getUserData("name").equals("Banshee") && event.getNodeB().getUserData("name").equals("TriggerVolume")) ||
-                    (event.getNodeA().getUserData("name").equals("TriggerVolume") && event.getNodeB().getUserData("name").equals("Banshee"))) {
-                if(bansheeWailTimer == 0) {
-                    soundController.play3dSound(SoundController.soundEvent.BANSHEE_WAIL, event.getNodeA().getLocalTranslation());
-                    bansheeWailTimer = 3000;
+        if(event.getNodeA() != null && event.getNodeB() != null) {
+            if(event.getNodeA().getUserData("name") != null && event.getNodeB().getUserData("name") != null) {
+                if ((event.getNodeA().getUserData("name").equals("Banshee") && event.getNodeB().getUserData("name").equals("TriggerVolume")) ||
+                        (event.getNodeA().getUserData("name").equals("TriggerVolume") && event.getNodeB().getUserData("name").equals("Banshee"))) {
+                    if(bansheeWailTimer == 0) {
+                        soundController.play3dSound(SoundController.soundEvent.BANSHEE_WAIL, event.getNodeA().getLocalTranslation());
+                        bansheeWailTimer = 3000;
+                    }
                 }
             }
         }

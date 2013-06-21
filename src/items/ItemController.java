@@ -63,12 +63,10 @@ public class ItemController extends RigidBodyControl implements PhysicsCollision
         PlayerController player;
         ItemController item;
 
-        if(event.getNodeA() != null) {
+        if(event.getNodeA() != null && event.getNodeB() != null) {
             if (!this.taken && (player = event.getNodeA().getControl(PlayerController.class)) != null) {
-                if(event.getNodeB() != null) {
-                    if ((item = event.getNodeB().getControl(ItemController.class)) != null) {
-                        takeItem(player, item.getItemReference().getItemType(), (Node) event.getNodeB(), item);
-                    }
+                if ((item = event.getNodeB().getControl(ItemController.class)) != null) {
+                    takeItem(player, item.getItemReference().getItemType(), (Node) event.getNodeB(), item);
                 }
             }
         }

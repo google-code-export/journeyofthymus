@@ -96,7 +96,7 @@ public class BansheeController extends CharacterControl implements AnimEventList
                 walkDirection.addLocal(player.getPhysicsLocation().subtractLocal(getPhysicsLocation())).normalizeLocal();
                 walkDirection.multLocal(moveSpeed);
                 setViewDirection(playerPosition);
-                if (getPhysicsLocation().distance(player.getPhysicsLocation()) > 8.5f) { // 2.5f
+                if (getPhysicsLocation().distance(player.getPhysicsLocation()) > 2.5f) {
                     setWalkDirection(walkDirection);
                     if (!isWalking) {
                         isWalking = true;
@@ -127,8 +127,6 @@ public class BansheeController extends CharacterControl implements AnimEventList
                 setEnabled(false);
                 ragdoll.setEnabled(true);
                 ragdoll.setRagdollMode();
-
-
                 break;
             case RECYCLE:
                 if (deathTimer <= 0) {
